@@ -1548,3 +1548,26 @@ body {
     overflow: hidden !important;
     word-wrap: break-word !important;
 }
+
+/* MODAL TEXT FIX */
+.modal-card,
+.modal-card *,
+.modal-body,
+.modal-body * {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.modal-card div[style*="background: var(--bg-input)"],
+.modal-card div[style*="padding: 15px"] {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+}
