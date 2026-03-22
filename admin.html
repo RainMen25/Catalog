@@ -763,7 +763,8 @@
             </div>
 
             <!-- Notifications Tab -->
-            <div id="notifications-tab" class="tab-content">
+            <div id="jobs-tab" class="tab-content"><div class="page-header"><h1 class="page-title">👤 Ищу работу</h1></div><div id="jobs-list"></div></div>
+<div id="notifications-tab" class="tab-content">
                 <div class="page-header">
                     <h1 class="page-title">🔔 Уведомления</h1>
                 </div>
@@ -850,6 +851,7 @@
                 case 'listings': loadAllListings(); break;
                 case 'complaints': loadComplaints(); break;
                 case 'users': loadUsers(); break;
+                case 'jobs': loadJobs(); break;
                 case 'notifications': loadAdminNotifications(); break;
             }
         }
@@ -890,7 +892,7 @@
                                 <circle cx="9" cy="7" r="4"></circle>
                             </svg>
                         </div>
-                        <div class="stat-card-value">${stats.users}</div>
+                        <div class="stat-card-value">${stats.totalUsers}</div>
                         <div class="stat-card-label">Пользователей</div>
                     </div>
                     <div class="stat-card">
@@ -899,7 +901,7 @@
                                 <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
                             </svg>
                         </div>
-                        <div class="stat-card-value">${stats.listings}</div>
+                        <div class="stat-card-value">${stats.totalListings}</div>
                         <div class="stat-card-label">Активных заявок</div>
                     </div>
                     <div class="stat-card">
@@ -909,7 +911,7 @@
                                 <polyline points="12 6 12 12 16 14"></polyline>
                             </svg>
                         </div>
-                        <div class="stat-card-value">${stats.pending}</div>
+                        <div class="stat-card-value">${stats.pendingListings}</div>
                         <div class="stat-card-label">На модерации</div>
                     </div>
                     <div class="stat-card">
@@ -927,7 +929,7 @@
                                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
                             </svg>
                         </div>
-                        <div class="stat-card-value">${stats.complaints}</div>
+                        <div class="stat-card-value">${stats.totalComplaints}</div>
                         <div class="stat-card-label">Жалоб</div>
                     </div>
                     <div class="stat-card">
@@ -937,7 +939,7 @@
                                 <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
                             </svg>
                         </div>
-                        <div class="stat-card-value">${stats.scam}</div>
+                        <div class="stat-card-value">${stats.totalScam}</div>
                         <div class="stat-card-label">SCAM</div>
                     </div>
                 `;
@@ -1381,6 +1383,8 @@ const ADMIN_LOGIN = 'admin';
 const ADMIN_PASSWORD = 'admin123';
 
 function checkAuth() {
+    // Hide all content first
+    document.querySelector('.admin-layout')?.style function checkAuth() {function checkAuth() { (document.querySelector('.admin-layout').style.display = 'none');
     const isLoggedIn = sessionStorage.getItem('ofb_admin_logged_in');
     if (isLoggedIn === 'true') {
         loadDashboard();
@@ -1436,5 +1440,54 @@ function login() {
 function logout() {
     sessionStorage.removeItem('ofb_admin_logged_in');
     location.reload();
+}
+</script>
+
+<script>
+async function loadJobs() {
+    try {
+        const { data } = await fetch('https://ofb-catalog-api.8cctq5y6ty.workers.dev/api/jobs').then(r => r.json());
+        
+        if (!data || data.length === 0) {
+            document.getElementById('jobs-list').innerHTML = '<p style="text-align: center; padding: 40px; color: var(--text-muted);">Нет заявок</p>';
+            return;
+        }
+
+        document.getElementById('jobs-list').innerHTML = `
+            <div class="cards-grid">
+                ${data.map(job => `
+                    <div class="listing-card-admin">
+                        <div class="card-header">
+                            <div class="card-avatar">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </div>
+                            <div class="card-info">
+                                <div class="card-name">${job.name}</div>
+                                <div class="card-meta">@${job.telegram} • ${job.category}</div>
+                            </div>
+                        </div>
+                        <p class="card-description">${job.description}</p>
+                        <div class="card-actions">
+                            <button class="action-btn approve" onclick="approveJob(${job.id})">✅ Одобрить</button>
+                            <button class="action-btn reject" onclick="rejectJob(${job.id})">❌ Отклонить</button>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    } catch (error) {
+        console.error('Failed to load jobs:', error);
+    }
+}
+
+async function approveJob(id) {
+    toast('Заявка одобрена');
+}
+
+async function rejectJob(id) {
+    toast('Заявка отклонена');
 }
 </script>
