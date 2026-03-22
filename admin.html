@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OFB Catalog - Admin Panel</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            padding: 20px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar-logo {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-logo h2 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            background: linear-gradient(135deg, var(--accent), #ff9966);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-menu li a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: var(--transition);
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-menu li a:hover,
+        .sidebar-menu li a.active {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border-left-color: var(--accent);
+        }
+
+        .sidebar-menu li a svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 30px;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+        }
+
+        .stat-card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+
+        .stat-card-icon.blue { background: rgba(0, 136, 255, 0.15); color: #0088ff; }
+        .stat-card-icon.green { background: rgba(76, 175, 80, 0.15); color: #4caf50; }
+        .stat-card-icon.orange { background: rgba(255, 152, 0, 0.15); color: #ff9800; }
+        .stat-card-icon.red { background: rgba(244, 67, 54, 0.15); color: #f44336; }
+        .stat-card-icon.gold { background: rgba(255, 215, 0, 0.15); color: #ffd700; }
+
+        .stat-card-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-card-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .data-table {
+            width: 100%;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+
+        .data-table tr:hover {
+            background: var(--bg-secondary);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.pending { background: rgba(255, 152, 0, 0.15); color: #ff9800; }
+        .status-badge.approved { background: rgba(76, 175, 80, 0.15); color: #4caf50; }
+        .status-badge.rejected { background: rgba(244, 67, 54, 0.15); color: #f44336; }
+
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+        }
+
+        .action-btn.approve { background: #00d4aa; color: #000; }
+        .action-btn.reject { background: #f44336; color: white; }
+        .action-btn.scam { background: #ff9800; color: white; }
+        .action-btn.premium { background: linear-gradient(135deg, #00d4aa, #00ffcc); color: #000; }
+        .action-btn.verify { background: #00d4aa; color: #000; }
+
+        .action-btn:hover { opacity: 0.8; }
+
+        .notifications-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .notif-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+        }
+
+        .notif-item.unread {
+            border-left: 3px solid var(--accent);
+        }
+
+        .notif-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg-input);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notif-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .notif-icon.new-listing svg { stroke: #4caf50; }
+        .notif-icon.complaint svg { stroke: #f44336; }
+        .notif-icon.profile-edit svg { stroke: #0088ff; }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .premium-badge-admin {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .scam-badge-admin {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #f44336;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .verified-badge-admin {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(0, 136, 255, 0.15);
+            color: #0088ff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px;
+            }
+
+            .sidebar-logo h2 span,
+            .sidebar-menu li a span {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 60px;
+                padding: 15px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Cards Grid for Listings */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .listing-card-admin {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .listing-card-admin:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .listing-card-admin.premium {
+            border-color: var(--premium-gold);
+            background: linear-gradient(135deg, rgba(255,215,0,0.05), transparent);
+        }
+
+        .listing-card-admin.scam {
+            border-color: var(--scam-red);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .card-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--bg-input);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .card-avatar svg {
+            width: 24px;
+            height: 24px;
+            stroke: var(--text-muted);
+        }
+
+        .card-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .card-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .card-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .card-description {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 15px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: var(--bg-input);
+            border-radius: var(--radius-sm);
+        }
+
+        .card-stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .card-stat svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .card-actions .action-btn {
+            flex: 1;
+            min-width: 80px;
+            padding: 10px 12px;
+            text-align: center;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-overlay.hidden {
+            display: none;
+        }
+
+        .modal-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-detail-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .modal-detail-value {
+            font-weight: 500;
+        }
+
+        .modal-description {
+            padding: 15px;
+            background: var(--bg-input);
+            border-radius: var(--radius-sm);
+            margin: 15px 0;
+            line-height: 1.6;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            padding: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .modal-actions .action-btn {
+            flex: 1;
+            padding: 14px;
+            font-size: 14px;
+        }
+
+        /* Chart styles */
+        .chart-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .chart-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            height: 150px;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: var(--accent);
+            border-radius: 4px 4px 0 0;
+            position: relative;
+            min-width: 30px;
+            transition: var(--transition);
+        }
+
+        .chart-bar:hover {
+            opacity: 0.8;
+        }
+
+        .chart-bar-label {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .chart-bar-value {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .category-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .category-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .category-bar {
+            flex: 1;
+            height: 8px;
+            background: var(--bg-input);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .category-bar-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 4px;
+        }
+
+        .category-label {
+            min-width: 100px;
+            font-size: 13px;
+        }
+
+        .category-count {
+            min-width: 30px;
+            text-align: right;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--bg-card);
+            border: 1px solid var(--accent);
+            border-radius: var(--radius-sm);
+            padding: 14px 24px;
+            color: var(--text-primary);
+            z-index: 1001;
+            animation: toastIn 0.3s ease;
+        }
+
+        .toast.hidden { display: none; }
+        .toast.success { border-color: #4caf50; }
+        .toast.error { border-color: #f44336; }
+
+        @keyframes toastIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <h2>🔥 <span>OFB Admin</span></h2>
+            </div>
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="#" class="active" onclick="switchAdminTab('dashboard')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                        <span>Дашборд</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="switchAdminTab('pending')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span>На модерации</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="switchAdminTab('listings')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                        <span>Все заявки</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="switchAdminTab('complaints')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                        <span>Жалобы</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="switchAdminTab('users')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        <span>Пользователи</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="switchAdminTab('notifications')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        <span>Уведомления</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Tab -->
+            <div id="dashboard-tab" class="tab-content active">
+                <div class="page-header">
+                    <h1 class="page-title">📊 Дашборд</h1>
+                </div>
+                <div class="stats-grid" id="stats-grid">
+                    <!-- Stats will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Pending Tab -->
+            <div id="pending-tab" class="tab-content">
+                <div class="page-header">
+                    <h1 class="page-title">📋 Заявки на модерации</h1>
+                </div>
+                <div id="pending-list">
+                    <!-- Pending listings will be loaded here -->
+                </div>
+            </div>
+
+            <!-- All Listings Tab -->
+            <div id="listings-tab" class="tab-content">
+                <div class="page-header">
+                    <h1 class="page-title">📋 Все заявки</h1>
+                </div>
+                <div id="all-listings">
+                    <!-- All listings will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Complaints Tab -->
+            <div id="complaints-tab" class="tab-content">
+                <div class="page-header">
+                    <h1 class="page-title">⚠️ Жалобы</h1>
+                </div>
+                <div id="complaints-list">
+                    <!-- Complaints will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Users Tab -->
+            <div id="users-tab" class="tab-content">
+                <div class="page-header">
+                    <h1 class="page-title">👥 Пользователи</h1>
+                </div>
+                <div id="users-list">
+                    <!-- Users will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Notifications Tab -->
+            <div id="notifications-tab" class="tab-content">
+                <div class="page-header">
+                    <h1 class="page-title">🔔 Уведомления</h1>
+                </div>
+                <div id="admin-notifications-list" class="notifications-list">
+                    <!-- Notifications will be loaded here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for viewing listing details -->
+    <div id="listing-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modal-title">Детали заявки</h3>
+                <button class="modal-close" onclick="closeModal()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="card-header">
+                    <div class="card-avatar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                    </div>
+                    <div class="card-info">
+                        <div class="card-name" id="modal-name"></div>
+                        <div class="card-meta" id="modal-meta"></div>
+                    </div>
+                </div>
+
+                <div class="modal-detail-row">
+                    <span class="modal-detail-label">Категория</span>
+                    <span class="modal-detail-value" id="modal-category"></span>
+                </div>
+                <div class="modal-detail-row">
+                    <span class="modal-detail-label">Telegram</span>
+                    <span class="modal-detail-value" id="modal-telegram"></span>
+                </div>
+                <div class="modal-detail-row">
+                    <span class="modal-detail-label">Статус</span>
+                    <span class="modal-detail-value" id="modal-status"></span>
+                </div>
+                <div class="modal-detail-row">
+                    <span class="modal-detail-label">Рейтинг</span>
+                    <span class="modal-detail-value" id="modal-rating"></span>
+                </div>
+                <div class="modal-detail-row">
+                    <span class="modal-detail-label">Просмотры</span>
+                    <span class="modal-detail-value" id="modal-views"></span>
+                </div>
+
+                <h4 style="margin-top: 20px; margin-bottom: 10px;">Описание</h4>
+                <div class="modal-description" id="modal-description"></div>
+            </div>
+            <div class="modal-actions" id="modal-actions"></div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <script>
+        // Admin Panel Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboard();
+        });
+
+        function switchAdminTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('active'));
+
+            document.getElementById(`${tab}-tab`).classList.add('active');
+            event.target.closest('a').classList.add('active');
+
+            switch(tab) {
+                case 'dashboard': loadDashboard(); break;
+                case 'pending': loadPending(); break;
+                case 'listings': loadAllListings(); break;
+                case 'complaints': loadComplaints(); break;
+                case 'users': loadUsers(); break;
+                case 'notifications': loadAdminNotifications(); break;
+            }
+        }
+
+        async function loadDashboard() {
+            try {
+                const [stats, allListings] = await Promise.all([
+                    fetch('/api/admin/stats').then(r => r.json()),
+                    fetch('/api/admin/listings/all').then(r => r.json())
+                ]);
+
+                // Calculate category stats
+                const categoryStats = {};
+                allListings.data.forEach(l => {
+                    if (l.status === 'approved') {
+                        categoryStats[l.category] = (categoryStats[l.category] || 0) + 1;
+                    }
+                });
+
+                const maxCategoryCount = Math.max(...Object.values(categoryStats), 1);
+
+                // Calculate rating distribution
+                const ratingDistribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+                allListings.data.forEach(l => {
+                    const rounded = Math.round(l.avg_rating);
+                    if (rounded >= 1 && rounded <= 5) {
+                        ratingDistribution[rounded]++;
+                    }
+                });
+
+                const maxRatingCount = Math.max(...Object.values(ratingDistribution), 1);
+
+                document.getElementById('stats-grid').innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-card-icon blue">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                            </svg>
+                        </div>
+                        <div class="stat-card-value">${stats.users}</div>
+                        <div class="stat-card-label">Пользователей</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon green">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            </svg>
+                        </div>
+                        <div class="stat-card-value">${stats.listings}</div>
+                        <div class="stat-card-label">Активных заявок</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon orange">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                        </div>
+                        <div class="stat-card-value">${stats.pending}</div>
+                        <div class="stat-card-label">На модерации</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon gold">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                            </svg>
+                        </div>
+                        <div class="stat-card-value">${stats.premium}/3</div>
+                        <div class="stat-card-label">Премиум</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon red">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                            </svg>
+                        </div>
+                        <div class="stat-card-value">${stats.complaints}</div>
+                        <div class="stat-card-label">Жалоб</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon red">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                            </svg>
+                        </div>
+                        <div class="stat-card-value">${stats.scam}</div>
+                        <div class="stat-card-label">SCAM</div>
+                    </div>
+                `;
+
+                // Add charts below stats
+                const dashboardTab = document.getElementById('dashboard-tab');
+                
+                // Remove existing charts if any
+                const existingCharts = dashboardTab.querySelectorAll('.chart-container');
+                existingCharts.forEach(c => c.remove());
+
+                // Category chart
+                const categoryChart = document.createElement('div');
+                categoryChart.className = 'chart-container';
+                categoryChart.innerHTML = `
+                    <h3 class="chart-title">📊 Заявки по категориям</h3>
+                    <div class="category-list">
+                        ${Object.entries(categoryStats)
+                            .sort((a, b) => b[1] - a[1])
+                            .map(([cat, count]) => `
+                                <div class="category-item">
+                                    <span class="category-label">${cat}</span>
+                                    <div class="category-bar">
+                                        <div class="category-bar-fill" style="width: ${(count / maxCategoryCount) * 100}%"></div>
+                                    </div>
+                                    <span class="category-count">${count}</span>
+                                </div>
+                            `).join('')}
+                    </div>
+                `;
+                dashboardTab.appendChild(categoryChart);
+
+                // Rating distribution chart
+                const ratingChart = document.createElement('div');
+                ratingChart.className = 'chart-container';
+                ratingChart.innerHTML = `
+                    <h3 class="chart-title">⭐ Распределение рейтингов</h3>
+                    <div class="chart-bars">
+                        ${[5, 4, 3, 2, 1].map(rating => {
+                            const count = ratingDistribution[rating];
+                            const height = (count / maxRatingCount) * 100;
+                            return `
+                                <div class="chart-bar" style="height: ${Math.max(height, 5)}%; background: ${rating >= 4 ? '#4caf50' : rating >= 3 ? '#ff9800' : '#f44336'}">
+                                    <span class="chart-bar-value">${count}</span>
+                                    <span class="chart-bar-label">${'★'.repeat(rating)}</span>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+                dashboardTab.appendChild(ratingChart);
+
+            } catch (error) {
+                console.error('Failed to load dashboard:', error);
+            }
+        }
+
+        // Helper function to create listing card
+        function createListingCardAdmin(listing) {
+            const premiumClass = listing.is_premium ? 'premium' : '';
+            const scamClass = listing.is_scam ? 'scam' : '';
+
+            return `
+                <div class="listing-card-admin ${premiumClass} ${scamClass}" onclick="showListingModal(${listing.id})">
+                    <div class="card-header">
+                        <div class="card-avatar">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                <polyline points="21 15 16 10 5 21"></polyline>
+                            </svg>
+                        </div>
+                        <div class="card-info">
+                            <div class="card-name">
+                                ${listing.name}
+                                ${listing.is_premium ? '<span class="premium-badge-admin">⭐ PREMIUM</span>' : ''}
+                                ${listing.is_scam ? '<span class="scam-badge-admin">⚠️ SCAM</span>' : ''}
+                                ${listing.is_verified ? '<span class="verified-badge-admin">✅</span>' : ''}
+                            </div>
+                            <div class="card-meta">
+                                <span class="status-badge ${listing.status}">${listing.status}</span>
+                                <span>#${listing.id}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="card-description">${listing.description}</p>
+                    <div class="card-stats">
+                        <div class="card-stat">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            ${listing.category}
+                        </div>
+                        <div class="card-stat">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                            </svg>
+                            ${listing.avg_rating ? listing.avg_rating.toFixed(1) : '0'} (${listing.reviews_count})
+                        </div>
+                        <div class="card-stat">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            ${listing.views}
+                        </div>
+                    </div>
+                    <div class="card-actions" onclick="event.stopPropagation()">
+                        ${listing.status === 'pending' ? `
+                            <button class="action-btn approve" onclick="approveListing(${listing.id})">✅ Одобрить</button>
+                            <button class="action-btn reject" onclick="rejectListing(${listing.id})">❌ Отклонить</button>
+                        ` : ''}
+                        <button class="action-btn premium" onclick="togglePremium(${listing.id}, ${listing.is_premium ? 0 : 1})">
+                            ${listing.is_premium ? '☆ Снять' : '⭐ Премиум'}
+                        </button>
+                        ${!listing.is_scam ? `<button class="action-btn scam" onclick="markScam(${listing.id})">⚠️ SCAM</button>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Show listing modal
+        async function showListingModal(id) {
+            try {
+                const listing = await fetch(`/api/listings/${id}`).then(r => r.json());
+
+                document.getElementById('modal-title').textContent = `Заявка #${listing.id}`;
+                document.getElementById('modal-name').innerHTML = `
+                    ${listing.name}
+                    ${listing.is_premium ? '<span class="premium-badge-admin">⭐ PREMIUM</span>' : ''}
+                    ${listing.is_scam ? '<span class="scam-badge-admin">⚠️ SCAM</span>' : ''}
+                `;
+                document.getElementById('modal-meta').innerHTML = `<span class="status-badge ${listing.status}">${listing.status}</span>`;
+                document.getElementById('modal-category').textContent = listing.category;
+                document.getElementById('modal-telegram').textContent = '@' + listing.telegram;
+                document.getElementById('modal-status').innerHTML = `<span class="status-badge ${listing.status}">${listing.status}</span>`;
+                document.getElementById('modal-rating').textContent = listing.avg_rating ? `${listing.avg_rating.toFixed(1)} (${listing.reviews_count} отзывов)` : 'Нет оценок';
+                document.getElementById('modal-views').textContent = listing.views;
+                document.getElementById('modal-description').textContent = listing.description;
+
+                document.getElementById('modal-actions').innerHTML = `
+                    ${listing.status === 'pending' ? `
+                        <button class="action-btn approve" onclick="approveListing(${listing.id}); closeModal();">✅ Одобрить</button>
+                        <button class="action-btn reject" onclick="rejectListing(${listing.id}); closeModal();">❌ Отклонить</button>
+                    ` : ''}
+                    <button class="action-btn premium" onclick="togglePremium(${listing.id}, ${listing.is_premium ? 0 : 1}); closeModal();">
+                        ${listing.is_premium ? '☆ Снять премиум' : '⭐ Сделать премиум'}
+                    </button>
+                    ${!listing.is_scam ? `<button class="action-btn scam" onclick="markScam(${listing.id}); closeModal();">⚠️ SCAM</button>` : ''}
+                    <button class="action-btn" onclick="closeModal()" style="background: var(--bg-input); color: var(--text-primary);">Закрыть</button>
+                `;
+
+                document.getElementById('listing-modal').classList.remove('hidden');
+            } catch (error) {
+                showToast('Ошибка загрузки', 'error');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('listing-modal').classList.add('hidden');
+        }
+
+        async function loadPending() {
+            try {
+                const { data } = await fetch('/api/admin/listings/pending').then(r => r.json());
+
+                if (data.length === 0) {
+                    document.getElementById('pending-list').innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 40px;">Нет заявок на модерации</p>';
+                    return;
+                }
+
+                document.getElementById('pending-list').innerHTML = `<div class="cards-grid">${data.map(createListingCardAdmin).join('')}</div>`;
+            } catch (error) {
+                console.error('Failed to load pending:', error);
+            }
+        }
+
+        async function loadAllListings() {
+            try {
+                const { data } = await fetch('/api/admin/listings/all').then(r => r.json());
+
+                document.getElementById('all-listings').innerHTML = `<div class="cards-grid">${data.map(createListingCardAdmin).join('')}</div>`;
+            } catch (error) {
+                console.error('Failed to load listings:', error);
+            }
+        }
+
+        async function loadComplaints() {
+            try {
+                const { data } = await fetch('/api/admin/complaints').then(r => r.json());
+
+                if (data.length === 0) {
+                    document.getElementById('complaints-list').innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 40px;">Нет жалоб</p>';
+                    return;
+                }
+
+                document.getElementById('complaints-list').innerHTML = `
+                    <div class="cards-grid">
+                        ${data.map(complaint => `
+                            <div class="listing-card-admin" onclick="showListingModal(${complaint.listing_id})">
+                                <div class="card-header">
+                                    <div class="card-avatar" style="background: rgba(244,67,54,0.15);">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="#f44336" stroke-width="2">
+                                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                        </svg>
+                                    </div>
+                                    <div class="card-info">
+                                        <div class="card-name">
+                                            ${complaint.listing_name}
+                                            <span class="status-badge ${complaint.status}">${complaint.status}</span>
+                                        </div>
+                                        <div class="card-meta">Жалоба #${complaint.id} → Заявка #${complaint.listing_id}</div>
+                                    </div>
+                                </div>
+                                <div class="modal-detail-row" style="border: none; padding: 10px 0;">
+                                    <span class="modal-detail-label">Причина</span>
+                                    <span class="modal-detail-value" style="color: #f44336; font-weight: 600;">${complaint.reason}</span>
+                                </div>
+                                ${complaint.details ? `<p class="card-description">${complaint.details}</p>` : ''}
+                                <div class="card-actions" onclick="event.stopPropagation()">
+                                    ${complaint.status === 'pending' ? `
+                                        <button class="action-btn scam" onclick="markScam(${complaint.listing_id})">⚠️ SCAM</button>
+                                        <button class="action-btn approve" onclick="resolveComplaint(${complaint.id})">✅ Решено</button>
+                                    ` : '<span style="color: var(--success);">✅ Решено</span>'}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Failed to load complaints:', error);
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const [usersRes, complaintsRes] = await Promise.all([
+                    fetch('/api/admin/users').then(r => r.json()),
+                    fetch('/api/admin/users/complaints').then(r => r.json())
+                ]);
+
+                const { data } = usersRes;
+                const userComplaints = complaintsRes.data;
+
+                document.getElementById('users-list').innerHTML = `
+                    <div class="cards-grid">
+                        ${data.map(user => {
+                            const complaints = userComplaints[user.id] || { count: 0, reasons: [] };
+                            const complaintWarning = complaints.count >= 3 ? 'style="border-color: #f44336;"' : '';
+
+                            return `
+                                <div class="listing-card-admin" ${complaintWarning}>
+                                    <div class="card-header">
+                                        <div class="card-avatar">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                                <circle cx="12" cy="7" r="4"></circle>
+                                            </svg>
+                                        </div>
+                                        <div class="card-info">
+                                            <div class="card-name">
+                                                ${user.name || user.first_name}
+                                                ${user.is_verified ? '<span class="verified-badge-admin">✅ Проверен</span>' : ''}
+                                                ${complaints.count >= 3 ? '<span class="scam-badge-admin">⚠️ Много жалоб</span>' : ''}
+                                            </div>
+                                            <div class="card-meta">@${user.telegram || user.username} • #${user.id}</div>
+                                        </div>
+                                    </div>
+                                    <div class="card-stats">
+                                        <div class="card-stat">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                            </svg>
+                                            ${user.avg_rating ? user.avg_rating.toFixed(1) : '0'}
+                                        </div>
+                                        <div class="card-stat">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                            </svg>
+                                            ${user.reviews_count} отзывов
+                                        </div>
+                                        <div class="card-stat" style="color: ${complaints.count > 0 ? '#f44336' : 'inherit'}">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                            </svg>
+                                            ${complaints.count} жалоб
+                                        </div>
+                                    </div>
+                                    <div style="padding: 10px; background: var(--bg-input); border-radius: var(--radius-sm); margin-bottom: 10px;">
+                                        <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 5px;">Лимит заявок:</label>
+                                        <input type="number" value="${user.listing_limit || 1}" min="1" max="100"
+                                            onchange="updateUserLimit(${user.id}, this.value)"
+                                            style="width: 60px; padding: 5px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px; color: var(--text-primary);">
+                                    </div>
+                                    <div class="card-actions" onclick="event.stopPropagation()">
+                                        ${user.is_verified
+                                            ? `<button class="action-btn reject" onclick="unverifyUser(${user.id})">❌ Снять верификацию</button>`
+                                            : `<button class="action-btn verify" onclick="verifyUser(${user.id})">✅ Верифицировать</button>`
+                                        }
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Failed to load users:', error);
+            }
+        }
+
+        async function updateUserLimit(userId, limit) {
+            await fetch(`/api/admin/users/${userId}/limit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ limit: parseInt(limit) })
+            });
+            showToast('Лимит обновлён', 'success');
+        }
+
+        async function loadAdminNotifications() {
+            try {
+                const { data } = await fetch('/api/admin/notifications').then(r => r.json());
+
+                document.getElementById('admin-notifications-list').innerHTML = data.map(notif => {
+                    const parsed = JSON.parse(notif.data);
+                    let icon, iconClass, text;
+
+                    switch(notif.type) {
+                        case 'new_listing':
+                            icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect></svg>';
+                            iconClass = 'new-listing';
+                            text = `Новая заявка: ${parsed.name} от ${parsed.user}`;
+                            break;
+                        case 'complaint':
+                            icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg>';
+                            iconClass = 'complaint';
+                            text = `Жалоба: ${parsed.reason} на заявку #${parsed.listing_id}`;
+                            break;
+                        case 'profile_edit':
+                            icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path></svg>';
+                            iconClass = 'profile-edit';
+                            text = `Редактирование профиля: ${parsed.user_name}`;
+                            break;
+                        default:
+                            icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path></svg>';
+                            iconClass = '';
+                            text = notif.type;
+                    }
+
+                    return `
+                        <div class="notif-item ${notif.is_read ? '' : 'unread'}">
+                            <div class="notif-icon ${iconClass}">${icon}</div>
+                            <div class="notification-content">
+                                <p class="notification-text">${text}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Failed to load notifications:', error);
+            }
+        }
+
+        // Actions
+        async function approveListing(id) {
+            await fetch(`/api/admin/listings/${id}/approve`, { method: 'POST' });
+            showToast('Заявка одобрена', 'success');
+            loadPending();
+            loadAllListings();
+        }
+
+        async function rejectListing(id) {
+            await fetch(`/api/admin/listings/${id}/reject`, { method: 'POST' });
+            showToast('Заявка отклонена', 'success');
+            loadPending();
+            loadAllListings();
+        }
+
+        async function markScam(id) {
+            await fetch(`/api/admin/listings/${id}/scam`, { method: 'POST' });
+            showToast('Отмечено как SCAM', 'success');
+            loadPending();
+            loadAllListings();
+            loadComplaints();
+        }
+
+        async function togglePremium(id, enable) {
+            const res = await fetch(`/api/admin/listings/${id}/premium`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ enable })
+            }).then(r => r.json());
+
+            if (res.success) {
+                showToast(enable ? 'Премиум активирован' : 'Премиум деактивирован', 'success');
+            } else {
+                showToast('Лимит премиум достигнут (3/3)', 'error');
+            }
+            loadAllListings();
+            loadDashboard();
+        }
+
+        async function resolveComplaint(id) {
+            await fetch(`/api/admin/complaints/${id}/resolve`, { method: 'POST' });
+            showToast('Жалоба решена', 'success');
+            loadComplaints();
+        }
+
+        async function verifyUser(id) {
+            await fetch(`/api/admin/users/${id}/verify`, { method: 'POST' });
+            showToast('Пользователь верифицирован', 'success');
+            loadUsers();
+        }
+
+        async function unverifyUser(id) {
+            await fetch(`/api/admin/users/${id}/unverify`, { method: 'POST' });
+            showToast('Верификация снята', 'success');
+            loadUsers();
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.classList.remove('hidden');
+
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
