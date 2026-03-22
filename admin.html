@@ -644,7 +644,7 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-logo">
-                <h2>🔥 <span>OFB Admin</span></h2>
+                <h2>🔥 <span>OFB Admin</span></h2><button onclick="logout()" style="margin-top: 10px; padding: 8px 16px; background: #222; border: 1px solid #2a2a2a; border-radius: 6px; color: #888; cursor: pointer; font-size: 12px;">Выйти</button>
             </div>
             <ul class="sidebar-menu">
                 <li>
@@ -857,8 +857,8 @@
         async function loadDashboard() {
             try {
                 const [stats, allListings] = await Promise.all([
-                    fetch('/api/admin/stats').then(r => r.json()),
-                    fetch('/api/admin/listings/all').then(r => r.json())
+                    fetch('https://ofb-catalog-api.8cctq5y6ty.workers.dev/api/admin/stats').then(r => r.json()),
+                    fetch('https://ofb-catalog-api.8cctq5y6ty.workers.dev/api/admin/listings/all').then(r => r.json())
                 ]);
 
                 // Calculate category stats
@@ -1063,7 +1063,7 @@
         // Show listing modal
         async function showListingModal(id) {
             try {
-                const listing = await fetch(`/api/listings/${id}`).then(r => r.json());
+                const listing = await fetch(`https://ofb-catalog-api.8cctq5y6ty.workers.dev/api/listings/${id}`).then(r => r.json());
 
                 document.getElementById('modal-title').textContent = `Заявка #${listing.id}`;
                 document.getElementById('modal-name').innerHTML = `
@@ -1103,7 +1103,7 @@
 
         async function loadPending() {
             try {
-                const { data } = await fetch('/api/admin/listings/pending').then(r => r.json());
+                const { data } = await fetch('https://ofb-catalog-api.8cctq5y6ty.workers.dev/api/admin/listings/pending').then(r => r.json());
 
                 if (data.length === 0) {
                     document.getElementById('pending-list').innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 40px;">Нет заявок на модерации</p>';
@@ -1118,7 +1118,7 @@
 
         async function loadAllListings() {
             try {
-                const { data } = await fetch('/api/admin/listings/all').then(r => r.json());
+                const { data } = await fetch('https://ofb-catalog-api.8cctq5y6ty.workers.dev/api/admin/listings/all').then(r => r.json());
 
                 document.getElementById('all-listings').innerHTML = `<div class="cards-grid">${data.map(createListingCardAdmin).join('')}</div>`;
             } catch (error) {
@@ -1128,7 +1128,7 @@
 
         async function loadComplaints() {
             try {
-                const { data } = await fetch('/api/admin/complaints').then(r => r.json());
+                const { data } = await fetch('https://ofb-catalog-api.8cctq5y6ty.workers.dev/api/admin/complaints').then(r => r.json());
 
                 if (data.length === 0) {
                     document.getElementById('complaints-list').innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 40px;">Нет жалоб</p>';
@@ -1178,8 +1178,8 @@
         async function loadUsers() {
             try {
                 const [usersRes, complaintsRes] = await Promise.all([
-                    fetch('/api/admin/users').then(r => r.json()),
-                    fetch('/api/admin/users/complaints').then(r => r.json())
+                    fetch('https://ofb-catalog-api.8cctq5y6ty.workers.dev/api/admin/users').then(r => r.json()),
+                    fetch('https://ofb-catalog-api.8cctq5y6ty.workers.dev/api/admin/users/complaints').then(r => r.json())
                 ]);
 
                 const { data } = usersRes;
@@ -1252,7 +1252,7 @@
         }
 
         async function updateUserLimit(userId, limit) {
-            await fetch(`/api/admin/users/${userId}/limit`, {
+            await fetch(`https://ofb-catalog-api.8cctq5y6ty.workers.dev/api/admin/users/${userId}/limit`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ limit: parseInt(limit) })
@@ -1262,7 +1262,7 @@
 
         async function loadAdminNotifications() {
             try {
-                const { data } = await fetch('/api/admin/notifications').then(r => r.json());
+                const { data } = await fetch('https://ofb-catalog-api.8cctq5y6ty.workers.dev/api/admin/notifications').then(r => r.json());
 
                 document.getElementById('admin-notifications-list').innerHTML = data.map(notif => {
                     const parsed = JSON.parse(notif.data);
@@ -1306,21 +1306,21 @@
 
         // Actions
         async function approveListing(id) {
-            await fetch(`/api/admin/listings/${id}/approve`, { method: 'POST' });
+            await fetch(`https://ofb-catalog-api.8cctq5y6ty.workers.dev/api/admin/listings/${id}/approve`, { method: 'POST' });
             showToast('Заявка одобрена', 'success');
             loadPending();
             loadAllListings();
         }
 
         async function rejectListing(id) {
-            await fetch(`/api/admin/listings/${id}/reject`, { method: 'POST' });
+            await fetch(`https://ofb-catalog-api.8cctq5y6ty.workers.dev/api/admin/listings/${id}/reject`, { method: 'POST' });
             showToast('Заявка отклонена', 'success');
             loadPending();
             loadAllListings();
         }
 
         async function markScam(id) {
-            await fetch(`/api/admin/listings/${id}/scam`, { method: 'POST' });
+            await fetch(`https://ofb-catalog-api.8cctq5y6ty.workers.dev/api/admin/listings/${id}/scam`, { method: 'POST' });
             showToast('Отмечено как SCAM', 'success');
             loadPending();
             loadAllListings();
@@ -1328,7 +1328,7 @@
         }
 
         async function togglePremium(id, enable) {
-            const res = await fetch(`/api/admin/listings/${id}/premium`, {
+            const res = await fetch(`https://ofb-catalog-api.8cctq5y6ty.workers.dev/api/admin/listings/${id}/premium`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ enable })
@@ -1344,19 +1344,19 @@
         }
 
         async function resolveComplaint(id) {
-            await fetch(`/api/admin/complaints/${id}/resolve`, { method: 'POST' });
+            await fetch(`https://ofb-catalog-api.8cctq5y6ty.workers.dev/api/admin/complaints/${id}/resolve`, { method: 'POST' });
             showToast('Жалоба решена', 'success');
             loadComplaints();
         }
 
         async function verifyUser(id) {
-            await fetch(`/api/admin/users/${id}/verify`, { method: 'POST' });
+            await fetch(`https://ofb-catalog-api.8cctq5y6ty.workers.dev/api/admin/users/${id}/verify`, { method: 'POST' });
             showToast('Пользователь верифицирован', 'success');
             loadUsers();
         }
 
         async function unverifyUser(id) {
-            await fetch(`/api/admin/users/${id}/unverify`, { method: 'POST' });
+            await fetch(`https://ofb-catalog-api.8cctq5y6ty.workers.dev/api/admin/users/${id}/unverify`, { method: 'POST' });
             showToast('Верификация снята', 'success');
             loadUsers();
         }
@@ -1374,3 +1374,67 @@
     </script>
 </body>
 </html>
+
+<script>
+// Admin authentication
+const ADMIN_LOGIN = 'admin';
+const ADMIN_PASSWORD = 'admin123';
+
+function checkAuth() {
+    const isLoggedIn = sessionStorage.getItem('ofb_admin_logged_in');
+    if (isLoggedIn === 'true') {
+        loadDashboard();
+        return;
+    }
+    showLoginForm();
+}
+
+function showLoginForm() {
+    document.body.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #0a0a0a;">
+            <div style="background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 40px; width: 100%; max-width: 400px;">
+                <h2 style="text-align: center; margin-bottom: 30px; color: #00d4aa;">🔐 OFB Admin</h2>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; color: #888; font-size: 14px;">Логин</label>
+                    <input type="text" id="login-input" placeholder="admin" style="
+                        width: 100%; padding: 14px; background: #222; border: 1px solid #2a2a2a;
+                        border-radius: 8px; color: white; font-size: 16px; box-sizing: border-box;">
+                </div>
+                <div style="margin-bottom: 30px;">
+                    <label style="display: block; margin-bottom: 8px; color: #888; font-size: 14px;">Пароль</label>
+                    <input type="password" id="password-input" placeholder="••••••" style="
+                        width: 100%; padding: 14px; background: #222; border: 1px solid #2a2a2a;
+                        border-radius: 8px; color: white; font-size: 16px; box-sizing: border-box;">
+                </div>
+                <button onclick="login()" style="
+                    width: 100%; padding: 16px; background: #00d4aa; border: none;
+                    border-radius: 8px; color: #000; font-size: 16px; font-weight: 600; cursor: pointer;">
+                    Войти
+                </button>
+                <p id="login-error" style="color: #ff4444; text-align: center; margin-top: 15px; display: none;">Неверный логин или пароль</p>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('password-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') login();
+    });
+}
+
+function login() {
+    const login = document.getElementById('login-input').value;
+    const password = document.getElementById('password-input').value;
+    
+    if (login === ADMIN_LOGIN && password === ADMIN_PASSWORD) {
+        sessionStorage.setItem('ofb_admin_logged_in', 'true');
+        location.reload();
+    } else {
+        document.getElementById('login-error').style.display = 'block';
+    }
+}
+
+function logout() {
+    sessionStorage.removeItem('ofb_admin_logged_in');
+    location.reload();
+}
+</script>
