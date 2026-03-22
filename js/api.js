@@ -1,4 +1,4 @@
-const API_BASE = 'https://ofb-catalog-api.8cctq5y6ty.workers.dev';
+const API_BASE = 'https://ofb-catalog-api.8cctq5y6ty.workers.dev/api';
 
 const tg = window.Telegram?.WebApp;
 
