@@ -416,7 +416,7 @@ async function submitJob(event) {
             user: getTelegramUser()
         });
 
-        showToast(t('toast_job_created'), 'success');
+        showToast('Заявка отправлена на модерацию', 'success');
         document.getElementById('create-job-form').reset();
     } catch (error) {
         showToast(t('toast_error'), 'error');
