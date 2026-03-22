@@ -1448,3 +1448,66 @@ body {
     overflow: hidden;
     box-sizing: border-box;
 }
+
+/* FORCE text truncation everywhere */
+.listing-card,
+.listing-card-admin,
+.premium-card {
+    word-break: break-all !important;
+    overflow-wrap: break-word !important;
+    hyphens: auto !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+.listing-card .listing-name,
+.listing-card-admin .card-name {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: block !important;
+    max-width: 180px !important;
+}
+
+.listing-card .listing-description,
+.listing-card-admin .card-description {
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    word-break: break-word !important;
+    max-height: 3em !important;
+}
+
+.listing-card .listing-telegram {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: block !important;
+    max-width: 100px !important;
+}
+
+.listing-card .listing-category {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: block !important;
+    max-width: 80px !important;
+}
+
+.listing-info {
+    min-width: 0 !important;
+    flex: 1 !important;
+    overflow: hidden !important;
+}
+
+.listing-header {
+    min-width: 0 !important;
+    overflow: hidden !important;
+}
+
+.listing-avatar {
+    flex-shrink: 0 !important;
+}
