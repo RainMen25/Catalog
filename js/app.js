@@ -267,11 +267,11 @@ function createJobCard(job) {
                 </svg>
             </div>
             <div class="listing-info">
-                <div class="listing-name">${job.name}</div>
+                <div class="listing-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;">${job.name}</div>
                 <span class="listing-category">${t('cat_' + job.category) || job.category}</span>
             </div>
         </div>
-        <p class="listing-description">${job.description}</p>
+        <p class="listing-description" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;max-height:3em;">${job.description}</p>
         <div class="listing-footer">
             <span class="listing-telegram">@${job.telegram}</span>
         </div>
