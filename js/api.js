@@ -57,7 +57,7 @@ async function uploadImage(file) {
     formData.append('image', file);
 
     try {
-        const response = await fetch(`${API_BASE}/api/upload`, {
+        const response = await fetch(`${API_BASE}/upload`, {
             method: 'POST',
             headers: {
                 'X-Telegram-Init-Data': tg?.initData || ''
