@@ -650,3 +650,73 @@ checkAuth();
 </script>
 </body>
 </html>
+
+// Missing admin functions
+async function approveListing(id) {
+    await api('/api/admin/listings/' + id + '/approve', 'POST');
+    toast('Одобрено');
+    loadPending();
+    loadListings();
+}
+
+async function rejectListing(id) {
+    await api('/api/admin/listings/' + id + '/reject', 'POST');
+    toast('Отклонено');
+    loadPending();
+    loadListings();
+}
+
+async function markScam(id) {
+    await api('/api/admin/listings/' + id + '/scam', 'POST');
+    toast('SCAM');
+    loadPending();
+    loadListings();
+}
+
+async function togglePremium(id, enable) {
+    await api('/api/admin/listings/' + id + '/premium', 'POST', { enable });
+    toast(enable ? 'Премиум включен' : 'Премиум выключен');
+    loadListings();
+}
+
+async function approveJob(id) {
+    await api('/api/admin/jobs/' + id + '/approve', 'POST');
+    toast('Заявка одобрена');
+    loadJobs();
+}
+
+async function rejectJob(id) {
+    await api('/api/admin/jobs/' + id + '/reject', 'POST');
+    toast('Заявка отклонена');
+    loadJobs();
+}
+
+async function resolveComplaint(id) {
+    await api('/api/admin/complaints/' + id + '/resolve', 'POST');
+    toast('Жалоба решена');
+    loadComplaints();
+}
+
+async function setUserLimit(id, limit) {
+    await api('/api/admin/users/' + id + '/limit', 'POST', { limit });
+    toast('Лимит установлен');
+    loadUsers();
+    closeModal();
+}
+
+async function sendNotification() {
+    const msg = document.getElementById('notifMsg').value;
+    if (!msg) return toast('Введите сообщение', 'err');
+    await api('/api/admin/notifications', 'POST', { message: msg });
+    toast('Уведомление отправлено');
+    document.getElementById('notifMsg').value = '';
+}
+
+// Aliases for card buttons
+function doApprove(id) { approveListing(id); }
+function doReject(id) { rejectListing(id); }
+function doScam(id) { markScam(id); }
+function doPremium(id) {
+    const listing = allListingsCache.find(l => l.id === id);
+    togglePremium(id, !listing.is_premium);
+}
