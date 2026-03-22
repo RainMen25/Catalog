@@ -277,11 +277,69 @@ function createJobCard(job) {
         </div>
     `;
 
-    card.onclick = () => {
-        window.open(`https://t.me/${job.telegram}`, '_blank');
-    };
+    card.onclick = () => showJobModal(job);
 
     return card;
+}
+
+// Job Modal
+function showJobModal(job) {
+    const existingModal = document.getElementById('job-modal');
+    if (existingModal) existingModal.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'job-modal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 500px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid var(--border);">
+                <h3>${t('tab_jobs')}</h3>
+                <button onclick="closeJobModal()" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 24px;">×</button>
+            </div>
+            <div style="padding: 20px;">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                    <div style="width: 60px; height: 60px; border-radius: 50%; background: var(--bg-input); display: flex; align-items: center; justify-content: center;">
+                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 style="margin-bottom: 5px;">${job.name}</h3>
+                        <span style="color: var(--text-secondary); font-size: 14px;">${t('cat_' + job.category) || job.category}</span>
+                    </div>
+                </div>
+                <div style="background: var(--bg-input); padding: 15px; border-radius: var(--radius-sm); margin-bottom: 20px; line-height: 1.6;">
+                    ${job.description}
+                </div>
+            </div>
+            <div style="padding: 20px; border-top: 1px solid var(--border); display: flex; gap: 10px;">
+                <button onclick="window.open('https://t.me/${job.telegram}', '_blank')" style="
+                    flex: 1; padding: 14px; background: var(--accent); border: none;
+                    border-radius: var(--radius-sm); color: #000; font-size: 14px;
+                    font-weight: 600; cursor: pointer; display: flex;
+                    align-items: center; justify-content: center; gap: 8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                    </svg>
+                    @${job.telegram}
+                </button>
+                <button onclick="closeJobModal()" style="
+                    padding: 14px 20px; background: var(--bg-input); border: 1px solid var(--border);
+                    border-radius: var(--radius-sm); color: var(--text-primary); cursor: pointer;">
+                    ✕
+                </button>
+            </div>
+        </div>
+    `;
+
+    modal.onclick = () => closeJobModal();
+    document.body.appendChild(modal);
+}
+
+function closeJobModal() {
+    const modal = document.getElementById('job-modal');
+    if (modal) modal.remove();
 }
 
 async function filterJobs() {
