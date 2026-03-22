@@ -1335,3 +1335,46 @@ body {
     text-overflow: ellipsis;
     max-width: 120px;
 }
+
+/* Fix text overflow everywhere */
+.listing-card {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+}
+
+.listing-card .listing-name,
+.listing-card .listing-description,
+.listing-card .listing-telegram,
+.listing-card .listing-category {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.listing-card .listing-description {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.listing-card .listing-name {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.listing-info {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+}
+
+.listing-header {
+    min-width: 0;
+}
