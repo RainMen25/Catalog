@@ -150,8 +150,7 @@
     <div class="login-box">
         <h1>OFB Admin</h1>
         <p>Панель управления каталогом</p>
-        <div id="loginError" class="login-error">Неверный логин или пароль</div>
-        <input type="text" id="loginUser" placeholder="Логин" autocomplete="username">
+        <div id="loginError" class="login-error">Неверный пароль</div>
         <input type="password" id="loginPass" placeholder="Пароль" autocomplete="current-password">
         <button onclick="doLogin()">Войти</button>
     </div>
@@ -174,7 +173,7 @@
             <li><a data-tab="notifications" onclick="goTab('notifications')"><span class="ico">&#128276;</span><span>Уведомления</span></a></li>
         </ul>
         <div class="sidebar-logout">
-            <button onclick="doLogout()">&#9211; Выйти</button>
+            <button onclick="doLogout()">&#128275; Выйти</button>
         </div>
     </aside>
 
@@ -241,39 +240,46 @@
 
 <script>
 const API = 'https://ofb-catalog-api.8cctq5y6ty.workers.dev';
+let adminPassword = '';
 let allListingsCache = [];
 let usersCache = [];
 
 /* ========== AUTH ========== */
+async function doLogin() {
+    const p = document.getElementById('loginPass').value.trim();
+    if (!p) return;
+    adminPassword = p;
+
+    // Validate against the real API
+    const d = await api('/api/admin/stats');
+    if (d === null) {
+        document.getElementById('loginError').style.display = 'block';
+        adminPassword = '';
+        return;
+    }
+    localStorage.setItem('ofb_admin_pwd', p);
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminPanel').classList.add('active');
+    renderStats(d);
+}
+
 function checkAuth() {
-    if (localStorage.getItem('ofb_admin_logged') === 'true') {
+    const saved = localStorage.getItem('ofb_admin_pwd');
+    if (saved) {
+        adminPassword = saved;
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('adminPanel').classList.add('active');
         loadDashboard();
-    } else {
-        document.getElementById('loginScreen').style.display = 'flex';
-        document.getElementById('adminPanel').classList.remove('active');
-    }
-}
-
-function doLogin() {
-    const u = document.getElementById('loginUser').value.trim();
-    const p = document.getElementById('loginPass').value.trim();
-    if (u === 'admin' && p === 'admin123') {
-        localStorage.setItem('ofb_admin_logged', 'true');
-        checkAuth();
-    } else {
-        document.getElementById('loginError').style.display = 'block';
     }
 }
 
 function doLogout() {
-    localStorage.removeItem('ofb_admin_logged');
+    localStorage.removeItem('ofb_admin_pwd');
+    adminPassword = '';
     location.reload();
 }
 
 document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-document.getElementById('loginUser').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPass').focus(); });
 
 /* ========== TABS ========== */
 function goTab(name) {
@@ -287,11 +293,18 @@ function goTab(name) {
 
 /* ========== API ========== */
 async function api(path, method = 'GET', body) {
-    const o = { method, headers: { 'Content-Type': 'application/json' } };
+    const o = { method, headers: { 'Content-Type': 'application/json', 'X-Admin-Password': adminPassword } };
     if (body) o.body = JSON.stringify(body);
     try {
         const r = await fetch(API + path, o);
-        if (!r.ok) { toast('HTTP ' + r.status, 'err'); return null; }
+        if (!r.ok) {
+            if (r.status === 401 || r.status === 403) {
+                toast('Нет доступа', 'err');
+                return null;
+            }
+            toast('HTTP ' + r.status, 'err');
+            return null;
+        }
         return await r.json();
     } catch (e) { toast('Ошибка: ' + e.message, 'err'); return null; }
 }
@@ -325,13 +338,17 @@ function esc(s) { const d = document.createElement('div'); d.textContent = s || 
 async function loadDashboard() {
     const d = await api('/api/admin/stats');
     if (!d) return;
+    renderStats(d);
+}
+
+function renderStats(d) {
     document.getElementById('statsGrid').innerHTML = `
-        <div class="stat blue"><div class="lbl">Пользователи</div><div class="val">${d.totalUsers ?? d.users ?? 0}</div></div>
-        <div class="stat"><div class="lbl">Активные объявления</div><div class="val">${d.totalListings ?? d.active ?? 0}</div></div>
-        <div class="stat turquoise"><div class="lbl">На модерации</div><div class="val">${d.pendingListings ?? d.pending ?? 0}</div></div>
+        <div class="stat blue"><div class="lbl">Пользователи</div><div class="val">${d.users ?? d.totalUsers ?? 0}</div></div>
+        <div class="stat"><div class="lbl">Активные объявления</div><div class="val">${d.listings ?? d.active ?? d.totalListings ?? 0}</div></div>
+        <div class="stat turquoise"><div class="lbl">На модерации</div><div class="val">${d.pending ?? d.pendingListings ?? 0}</div></div>
         <div class="stat gold"><div class="lbl">Премиум (из 3)</div><div class="val">${d.premium ?? 0} / 3</div></div>
-        <div class="stat red"><div class="lbl">Жалобы</div><div class="val">${d.totalComplaints ?? d.complaints ?? 0}</div></div>
-        <div class="stat"><div class="lbl">SCAM</div><div class="val">${d.totalScam ?? d.scam ?? 0}</div></div>
+        <div class="stat red"><div class="lbl">Жалобы</div><div class="val">${d.complaints ?? d.totalComplaints ?? 0}</div></div>
+        <div class="stat"><div class="lbl">SCAM</div><div class="val">${d.scam ?? d.totalScam ?? 0}</div></div>
     `;
 }
 
@@ -343,17 +360,18 @@ function card(listing, showActions = true) {
     const cat = listing.category || '—';
     const tg = listing.telegram || listing.ownerName || '—';
     const st = listing.status || 'pending';
-    const premium = listing.is_premium || listing.premium || false;
-    const scam = listing.is_scam || listing.scam || false;
+    const premium = listing.is_premium || false;
+    const scam = listing.is_scam || false;
     const verified = listing.is_verified || false;
-    const rating = listing.avg_rating || listing.rating || 0;
+    const rating = listing.avg_rating || 0;
     const reviews = listing.reviews_count || 0;
     const views = listing.views || 0;
-    const limit = listing.listing_limit ?? listing.limit ?? '—';
+    const isJob = listing.type === 'job';
     const imgs = listing.images || listing.photos || [];
-    const img = imgs.length ? (typeof imgs[0] === 'string' ? imgs[0] : (imgs[0].url || imgs[0].src || '')) : '';
+    const img = imgs.length ? (typeof imgs[0] === 'string' ? imgs[0] : (imgs[0].url || '')) : '';
 
     let tags = '';
+    if (isJob) tags += '<span class="tag tag-active">РАБОТА</span> ';
     if (scam) tags += '<span class="tag tag-scam">SCAM</span> ';
     if (st === 'active' || st === 'approved') tags += '<span class="tag tag-active">Активно</span> ';
     else if (st === 'pending') tags += '<span class="tag tag-pending">Модерация</span> ';
@@ -363,14 +381,15 @@ function card(listing, showActions = true) {
 
     let acts = '';
     if (showActions) {
-        if (st === 'pending') {
-            acts = `<button class="btn btn-ok" onclick="doApprove(${id})">&#10004; Одобрить</button>
-                    <button class="btn btn-no" onclick="doReject(${id})">&#10008; Отклонить</button>
-                    <button class="btn btn-warn" onclick="doScam(${id})">SCAM</button>`;
+        if (isJob) {
+            if (st === 'pending') acts = `<button class="btn btn-ok" onclick="doApproveJob(${id})">&#10004; Одобрить</button>
+                <button class="btn btn-no" onclick="doRejectJob(${id})">&#10008; Отклонить</button>`;
+            else if (st !== 'rejected') acts = `<button class="btn btn-no" onclick="doRejectJob(${id})">&#10008; Отклонить</button>`;
         } else {
-            acts = `<button class="btn btn-ghost" onclick="doPremium(${id})">${premium ? 'Убрать Premium' : 'Premium'}</button>
-                    <button class="btn btn-warn" onclick="doScam(${id})">${scam ? 'Снять SCAM' : 'SCAM'}</button>
-                    <button class="btn btn-ghost" onclick="limitModal(${id},'${limit}')">Лимит: ${limit}</button>`;
+            if (st === 'pending') acts = `<button class="btn btn-ok" onclick="doApprove(${id})">&#10004; Одобрить</button>
+                <button class="btn btn-no" onclick="doReject(${id})">&#10008; Отклонить</button> `;
+            acts += `<button class="btn btn-ghost" onclick="doPremium(${id})">${premium ? 'Убрать Premium' : 'Premium'}</button>
+                    <button class="btn btn-warn" onclick="doScam(${id})">${scam ? 'Снять SCAM' : 'SCAM'}</button>`;
         }
     }
 
@@ -384,8 +403,8 @@ function card(listing, showActions = true) {
             ${desc ? `<div class="desc" id="d${id}">${esc(desc)}</div>${desc.length > 60 ? `<div class="desc-toggle" onclick="this.previousElementSibling.classList.toggle('open')">Развернуть / Свернуть</div>` : ''}` : ''}
             <div class="r"><span class="rk">Категория</span><span class="rv">${esc(cat)}</span></div>
             <div class="r"><span class="rk">Telegram</span><span class="rv">${esc(tg)}</span></div>
-            <div class="r"><span class="rk">Рейтинг</span><span class="rv">${rating.toFixed(1)} (${reviews})</span></div>
-            <div class="r"><span class="rk">Просмотры</span><span class="rv">${views}</span></div>
+            ${!isJob ? `<div class="r"><span class="rk">Рейтинг</span><span class="rv">${Number(rating).toFixed(1)} (${reviews})</span></div>
+            <div class="r"><span class="rk">Просмотры</span><span class="rv">${views}</span></div>` : ''}
             <div class="r"><span class="rk">ID</span><span class="rv" style="font-size:10px">${id}</span></div>
         </div>
         ${acts ? `<div class="card-acts">${acts}</div>` : ''}
@@ -397,7 +416,7 @@ async function loadPending() {
     const el = document.getElementById('pendingGrid');
     el.innerHTML = '<div class="loading">Загрузка</div>';
     const d = await api('/api/admin/listings/pending');
-    const items = Array.isArray(d) ? d : (d.data || d.listings || []);
+    const items = Array.isArray(d) ? d : (d?.data || d?.listings || []);
     document.getElementById('pendingCnt').textContent = items.length + ' шт.';
     setBadge('bPending', items.length);
     el.innerHTML = items.length ? items.map(i => card(i, true)).join('') : '<div class="empty">Нет объявлений на модерации</div>';
@@ -408,7 +427,7 @@ async function loadListings() {
     const el = document.getElementById('listingsGrid');
     el.innerHTML = '<div class="loading">Загрузка</div>';
     const d = await api('/api/admin/listings/all');
-    allListingsCache = Array.isArray(d) ? d : (d.data || d.listings || []);
+    allListingsCache = Array.isArray(d) ? d : (d?.data || d?.listings || []);
     document.getElementById('listingsCnt').textContent = allListingsCache.length + ' шт.';
     renderListings(allListingsCache);
 }
@@ -425,48 +444,21 @@ async function loadJobs() {
     const el = document.getElementById('jobsGrid');
     el.innerHTML = '<div class="loading">Загрузка</div>';
     const d = await api('/api/jobs');
-    const items = Array.isArray(d) ? d : (d.data || d.jobs || []);
+    const items = Array.isArray(d) ? d : (d?.data || d?.jobs || []);
     document.getElementById('jobsCnt').textContent = items.length + ' шт.';
     const pending = items.filter(j => j.status === 'pending' || !j.status);
     setBadge('bJobs', pending.length);
-    if (!items.length) { el.innerHTML = '<div class="empty">Нет заявок на работу</div>'; return; }
-    el.innerHTML = items.map(j => {
-        const id = j.id;
-        const name = j.name || j.fullName || '—';
-        const tg = j.telegram || j.contact || '—';
-        const desc = j.description || j.about || '';
-        const cat = j.category || j.skills || '—';
-        const city = j.city || j.location || '—';
-        const st = j.status || 'pending';
-        let tags = '';
-        if (st === 'approved' || st === 'active') tags = '<span class="tag tag-active">Одобрено</span>';
-        else if (st === 'rejected') tags = '<span class="tag tag-rejected">Отклонено</span>';
-        else tags = '<span class="tag tag-pending">Ожидает</span>';
-
-        return `<div class="card">
-            <div class="card-top"><div class="card-title">${esc(name)}</div><div>${tags}</div></div>
-            <div class="card-body">
-                ${desc ? `<div class="desc" id="dj${id}">${esc(desc)}</div>${desc.length > 60 ? `<div class="desc-toggle" onclick="this.previousElementSibling.classList.toggle('open')">Развернуть / Свернуть</div>` : ''}` : ''}
-                <div class="r"><span class="rk">Telegram</span><span class="rv">${esc(tg)}</span></div>
-                <div class="r"><span class="rk">Категория</span><span class="rv">${esc(cat)}</span></div>
-                <div class="r"><span class="rk">Город</span><span class="rv">${esc(city)}</span></div>
-            </div>
-            <div class="card-acts">
-                ${st !== 'approved' && st !== 'active' ? `<button class="btn btn-ok" onclick="doApproveJob(${id})">&#10004; Одобрить</button>` : ''}
-                ${st !== 'rejected' ? `<button class="btn btn-no" onclick="doRejectJob(${id})">&#10008; Отклонить</button>` : ''}
-            </div>
-        </div>`;
-    }).join('');
+    el.innerHTML = items.length ? items.map(j => card({ ...j, type: 'job' }, true)).join('') : '<div class="empty">Нет заявок на работу</div>';
 }
 
 async function doApproveJob(id) {
     if (!confirm('Одобрить заявку?')) return;
-    const r = await api('/api/jobs/' + id + '/approve', 'POST');
+    const r = await api('/api/admin/jobs/' + id + '/approve', 'POST');
     if (r !== null) { toast('Заявка одобрена'); loadJobs(); }
 }
 async function doRejectJob(id) {
     if (!confirm('Отклонить заявку?')) return;
-    const r = await api('/api/jobs/' + id + '/reject', 'POST');
+    const r = await api('/api/admin/jobs/' + id + '/reject', 'POST');
     if (r !== null) { toast('Заявка отклонена'); loadJobs(); }
 }
 
@@ -475,25 +467,25 @@ async function loadComplaints() {
     const el = document.getElementById('complaintsGrid');
     el.innerHTML = '<div class="loading">Загрузка</div>';
     const d = await api('/api/admin/complaints');
-    const items = Array.isArray(d) ? d : (d.data || d.complaints || []);
+    const items = Array.isArray(d) ? d : (d?.data || d?.complaints || []);
     document.getElementById('complaintsCnt').textContent = items.length + ' шт.';
     setBadge('bComplaints', items.length);
     if (!items.length) { el.innerHTML = '<div class="empty">Нет жалоб</div>'; return; }
     el.innerHTML = items.map(c => {
         const id = c.id;
-        const from = c.from || c.reporter || c.author || '—';
-        const target = c.targetId || c.listingId || c.listing_id || c.target || '';
-        const reason = c.reason || c.message || c.text || '—';
-        const date = c.createdAt || c.date || '';
+        const target = c.listing_id || c.targetId || '';
+        const reason = c.reason || '—';
+        const details = c.details || '';
+        const date = c.created_at || c.createdAt || '';
         const st = c.status || 'pending';
 
         return `<div class="card">
-            <div class="card-top"><div class="card-title">Жалоба #${String(id).substring(0, 8)}</div>
+            <div class="card-top"><div class="card-title">Жалоба #${id}</div>
                 <span class="tag ${st === 'resolved' ? 'tag-active' : 'tag-pending'}">${st === 'resolved' ? 'Решена' : 'Новая'}</span></div>
             <div class="card-body">
-                <div class="r"><span class="rk">От</span><span class="rv">${esc(from)}</span></div>
-                <div class="r"><span class="rk">На объявление</span><span class="rv" style="font-size:10px">${esc(target)}</span></div>
                 <div class="r"><span class="rk">Причина</span><span class="rv">${esc(reason)}</span></div>
+                ${details ? `<div class="r"><span class="rk">Детали</span><span class="rv">${esc(details)}</span></div>` : ''}
+                <div class="r"><span class="rk">На заявку</span><span class="rv">#${esc(String(target))}</span></div>
                 ${date ? `<div class="r"><span class="rk">Дата</span><span class="rv">${new Date(date).toLocaleString()}</span></div>` : ''}
             </div>
             <div class="card-acts">
@@ -514,7 +506,7 @@ async function loadUsers() {
     const el = document.getElementById('usersGrid');
     el.innerHTML = '<div class="loading">Загрузка</div>';
     const d = await api('/api/admin/users');
-    usersCache = Array.isArray(d) ? d : (d.data || d.users || []);
+    usersCache = Array.isArray(d) ? d : (d?.data || d?.users || []);
     document.getElementById('usersCnt').textContent = usersCache.length + ' шт.';
     renderUsers(usersCache);
 }
@@ -522,50 +514,52 @@ function renderUsers(items) {
     const el = document.getElementById('usersGrid');
     if (!items.length) { el.innerHTML = '<div class="empty">Нет пользователей</div>'; return; }
     el.innerHTML = items.map(u => {
-        const id = u.id;
-        const name = u.name || u.username || u.first_name || '—';
-        const tg = u.telegram || u.username || '—';
-        const verified = u.is_verified || u.verified || false;
-        const rating = u.avg_rating || 0;
-        const reviews = u.reviews_count || 0;
+        const tid = u.telegram_id || u.id;
+        const name = [u.first_name, u.last_name].filter(Boolean).join(' ') || u.username || '—';
+        const username = u.username || '';
+        const verified = u.is_verified || false;
         const limit = u.listing_limit || 1;
-        const complaints = u.complaints_count || 0;
+        const listingsCount = u.listings_count || 0;
 
         return `<div class="card">
             <div class="card-top"><div class="card-title">${esc(name)}</div>
-                <div>${verified ? '<span class="tag tag-verified">VERIFIED</span>' : ''}${complaints >= 3 ? ' <span class="tag tag-scam">МНОГО ЖАЛОБ</span>' : ''}</div></div>
+                <div>${verified ? '<span class="tag tag-verified">VERIFIED</span>' : ''}</div></div>
             <div class="card-body">
-                <div class="r"><span class="rk">Telegram</span><span class="rv">@${esc(tg)}</span></div>
-                <div class="r"><span class="rk">Рейтинг</span><span class="rv">${rating.toFixed(1)}</span></div>
-                <div class="r"><span class="rk">Отзывы</span><span class="rv">${reviews}</span></div>
-                <div class="r"><span class="rk">Жалобы</span><span class="rv" style="color:${complaints > 0 ? '#f85149' : '#c9d1d9'}">${complaints}</span></div>
-                <div class="r"><span class="rk">ID</span><span class="rv" style="font-size:10px">${id}</span></div>
+                ${username ? `<div class="r"><span class="rk">Telegram</span><span class="rv">@${esc(username)}</span></div>` : ''}
+                <div class="r"><span class="rk">ID</span><span class="rv" style="font-size:10px">${esc(String(tid))}</span></div>
+                <div class="r"><span class="rk">Заявки</span><span class="rv">${listingsCount}</span></div>
+                <div class="r"><span class="rk">Лимит заявок</span><span class="rv">${limit}</span></div>
             </div>
             <div style="padding:8px 0">
-                <label style="font-size:11px;color:#8b949e;display:block;margin-bottom:4px">Лимит заявок:</label>
-                <input type="number" value="${limit}" min="1" max="100" style="width:60px;padding:5px;background:#0d1117;border:1px solid #30363d;border-radius:4px;color:#c9d1d9;font-size:12px" onchange="setUserLimit(${id},this.value)">
+                <label style="font-size:11px;color:#8b949e;display:block;margin-bottom:4px">Новый лимит:</label>
+                <div style="display:flex;gap:6px;align-items:center">
+                    <input type="number" value="${limit}" min="1" max="100" id="limit-${esc(String(tid))}" style="width:70px;padding:5px;background:#0d1117;border:1px solid #30363d;border-radius:4px;color:#c9d1d9;font-size:12px">
+                    <button class="btn btn-ghost" onclick="setUserLimit('${esc(String(tid))}')">Сохранить</button>
+                </div>
             </div>
             <div class="card-acts">
-                <button class="btn ${verified ? 'btn-ghost' : 'btn-ok'}" onclick="${verified ? 'unverifyUser' : 'verifyUser'}(${id})">${verified ? 'Снять верификацию' : '&#10004; Верифицировать'}</button>
+                <button class="btn ${verified ? 'btn-ghost' : 'btn-ok'}" onclick="${verified ? 'unverifyUser' : 'verifyUser'}('${esc(String(tid))}')">${verified ? 'Снять верификацию' : '&#10004; Верифицировать'}</button>
             </div>
         </div>`;
     }).join('');
 }
 function filterUsers() {
     const q = document.getElementById('searchUsers').value.toLowerCase();
-    renderUsers(usersCache.filter(u => (u.name || u.username || u.first_name || '').toLowerCase().includes(q)));
+    renderUsers(usersCache.filter(u => ([u.first_name, u.last_name, u.username].filter(Boolean).join(' ')).toLowerCase().includes(q)));
 }
 
-async function verifyUser(id) {
-    const r = await api('/api/admin/users/' + id + '/verify', 'POST');
+async function verifyUser(telegramId) {
+    const r = await api('/api/admin/users/' + telegramId + '/verify', 'POST');
     if (r !== null) { toast('Пользователь верифицирован'); loadUsers(); }
 }
-async function unverifyUser(id) {
-    const r = await api('/api/admin/users/' + id + '/unverify', 'POST');
+async function unverifyUser(telegramId) {
+    const r = await api('/api/admin/users/' + telegramId + '/verify', 'POST');
     if (r !== null) { toast('Верификация снята'); loadUsers(); }
 }
-async function setUserLimit(id, val) {
-    const r = await api('/api/admin/users/' + id + '/limit', 'POST', { limit: parseInt(val) || 1 });
+async function setUserLimit(telegramId) {
+    const el = document.getElementById('limit-' + telegramId);
+    const val = parseInt(el?.value) || 1;
+    const r = await api('/api/admin/users/' + telegramId + '/limit', 'POST', { limit: val });
     if (r !== null) toast('Лимит обновлён: ' + val);
 }
 
@@ -574,18 +568,17 @@ async function loadNotifications() {
     const el = document.getElementById('notifGrid');
     el.innerHTML = '<div class="loading">Загрузка</div>';
     const d = await api('/api/admin/notifications');
-    const items = Array.isArray(d) ? d : (d.data || d.notifications || []);
+    const items = Array.isArray(d) ? d : (d?.data || d?.notifications || []);
     if (!items.length) { el.innerHTML = '<div class="empty">Нет уведомлений</div>'; return; }
     el.innerHTML = items.map(n => {
         let title = '', body = '';
         try {
             const p = typeof n.data === 'string' ? JSON.parse(n.data) : (n.data || {});
-            if (n.type === 'new_listing') { title = 'Новая заявка'; body = p.name + ' от ' + p.user; }
-            else if (n.type === 'complaint') { title = 'Жалоба'; body = p.reason + ' на #' + p.listing_id; }
-            else if (n.type === 'profile_edit') { title = 'Редактирование'; body = p.user_name; }
+            if (n.type === 'new_listing') { title = 'Новая заявка'; body = (p.name || '') + ' от ' + (p.user || ''); }
+            else if (n.type === 'complaint') { title = 'Жалоба'; body = (p.reason || '') + ' на #' + (p.listing_id || ''); }
             else { title = n.title || n.type || '—'; body = n.body || n.message || ''; }
         } catch(e) { title = n.title || n.type || '—'; body = n.body || n.message || ''; }
-        const date = n.createdAt || n.date || '';
+        const date = n.created_at || n.createdAt || '';
         return `<div class="card">
             <div class="card-top"><div class="card-title">${esc(title)}</div></div>
             <div class="card-body">
@@ -625,21 +618,6 @@ async function doPremium(id) {
     if (r !== null) { toast('Premium изменён'); refresh(); }
 }
 
-function limitModal(id, cur) {
-    openModal(`<h3>Установить лимит</h3>
-        <p style="color:#8b949e;font-size:12px;margin-bottom:12px">Текущий: ${cur}</p>
-        <input type="number" id="limVal" value="${cur !== '—' ? cur : 0}" min="0">
-        <div class="modal-acts">
-            <button class="btn btn-ok" onclick="saveLimit(${id})">Сохранить</button>
-            <button class="btn btn-ghost" onclick="closeModal()">Отмена</button>
-        </div>`);
-}
-async function saveLimit(id) {
-    const v = parseInt(document.getElementById('limVal').value) || 0;
-    const r = await api('/api/admin/listings/' + id + '/limit', 'POST', { limit: v });
-    if (r !== null) { toast('Лимит: ' + v); closeModal(); refresh(); }
-}
-
 function refresh() {
     const a = document.querySelector('.sidebar-nav a.active');
     if (a) goTab(a.dataset.tab);
@@ -650,73 +628,3 @@ checkAuth();
 </script>
 </body>
 </html>
-
-// Missing admin functions
-async function approveListing(id) {
-    await api('/api/admin/listings/' + id + '/approve', 'POST');
-    toast('Одобрено');
-    loadPending();
-    loadListings();
-}
-
-async function rejectListing(id) {
-    await api('/api/admin/listings/' + id + '/reject', 'POST');
-    toast('Отклонено');
-    loadPending();
-    loadListings();
-}
-
-async function markScam(id) {
-    await api('/api/admin/listings/' + id + '/scam', 'POST');
-    toast('SCAM');
-    loadPending();
-    loadListings();
-}
-
-async function togglePremium(id, enable) {
-    await api('/api/admin/listings/' + id + '/premium', 'POST', { enable });
-    toast(enable ? 'Премиум включен' : 'Премиум выключен');
-    loadListings();
-}
-
-async function approveJob(id) {
-    await api('/api/admin/jobs/' + id + '/approve', 'POST');
-    toast('Заявка одобрена');
-    loadJobs();
-}
-
-async function rejectJob(id) {
-    await api('/api/admin/jobs/' + id + '/reject', 'POST');
-    toast('Заявка отклонена');
-    loadJobs();
-}
-
-async function resolveComplaint(id) {
-    await api('/api/admin/complaints/' + id + '/resolve', 'POST');
-    toast('Жалоба решена');
-    loadComplaints();
-}
-
-async function setUserLimit(id, limit) {
-    await api('/api/admin/users/' + id + '/limit', 'POST', { limit });
-    toast('Лимит установлен');
-    loadUsers();
-    closeModal();
-}
-
-async function sendNotification() {
-    const msg = document.getElementById('notifMsg').value;
-    if (!msg) return toast('Введите сообщение', 'err');
-    await api('/api/admin/notifications', 'POST', { message: msg });
-    toast('Уведомление отправлено');
-    document.getElementById('notifMsg').value = '';
-}
-
-// Aliases for card buttons
-function doApprove(id) { approveListing(id); }
-function doReject(id) { rejectListing(id); }
-function doScam(id) { markScam(id); }
-function doPremium(id) {
-    const listing = allListingsCache.find(l => l.id === id);
-    togglePremium(id, !listing.is_premium);
-}

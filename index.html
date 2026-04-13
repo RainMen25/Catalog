@@ -72,14 +72,6 @@
                     </svg>
                     <span data-i18n="tab_jobs">Ищу работу</span>
                 </button>
-                <button class="tab-btn" data-tab="create" onclick="switchTab('create')">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="12" y1="8" x2="12" y2="16"></line>
-                        <line x1="8" y1="12" x2="16" y2="12"></line>
-                    </svg>
-                    <span data-i18n="tab_create">Создать</span>
-                </button>
                 <button class="tab-btn" data-tab="favorites" onclick="switchTab('favorites')">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
@@ -91,6 +83,13 @@
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                     </svg>
                     <span data-i18n="tab_chat">Чат</span>
+                </button>
+                <button class="tab-btn tab-btn-create" data-tab="create" onclick="switchTab('create')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span data-i18n="tab_create">Создать</span>
                 </button>
             </nav>
 
@@ -135,6 +134,7 @@
                             <option value="designers" data-i18n="cat_designers">Дизайнеры</option>
                             <option value="other" data-i18n="cat_other">Другое</option>
                         </select>
+                        <input type="text" id="job-search-input" placeholder="Поиск..." data-i18n-placeholder="search_placeholder" oninput="filterJobs()">
                     </div>
                     <div id="jobs-container" class="listings-grid"></div>
                     <div id="no-jobs" class="no-results hidden">
@@ -516,6 +516,16 @@
                     <button class="cancel-btn" onclick="closeComplaintModal()" data-i18n="cancel">Отмена</button>
                     <button class="submit-btn" onclick="submitComplaint()" data-i18n="complaint_submit">Отправить</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Success Screen after submit -->
+        <div id="success-screen" class="screen hidden">
+            <div class="success-content">
+                <div class="success-icon">✅</div>
+                <h2 id="success-title" data-i18n="success_title">Заявка отправлена!</h2>
+                <p id="success-text" data-i18n="success_text">Ваша заявка отправлена на модерацию. После проверки она появится в каталоге.</p>
+                <button class="submit-btn" onclick="closeSuccess()" data-i18n="success_btn">Отлично</button>
             </div>
         </div>
 

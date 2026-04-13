@@ -1571,3 +1571,56 @@ body {
     max-width: 100% !important;
     overflow: hidden !important;
 }
+
+/* ─── Create button — highlighted in nav ─── */
+.tab-btn-create {
+    background: var(--accent) !important;
+    color: #000 !important;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+}
+.tab-btn-create svg {
+    stroke: #000 !important;
+}
+.tab-btn-create.active,
+.tab-btn-create:hover {
+    background: var(--accent-hover) !important;
+    color: #000 !important;
+}
+
+/* ─── Success screen ─── */
+#success-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--bg-primary);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#success-screen.hidden {
+    display: none !important;
+}
+.success-content {
+    text-align: center;
+    padding: 40px 30px;
+    max-width: 320px;
+}
+.success-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    line-height: 1;
+}
+.success-content h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--accent);
+}
+.success-content p {
+    color: var(--text-secondary);
+    font-size: 15px;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+

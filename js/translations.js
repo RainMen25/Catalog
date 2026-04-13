@@ -87,6 +87,13 @@ const translations = {
         toast_favorite_removed: 'Удалено из избранного',
         toast_error: 'Произошла ошибка',
 
+        // Success screen
+        success_title: 'Заявка отправлена!',
+        success_text: 'Ваша заявка на модерации. После проверки она появится в каталоге.',
+        success_title_job: 'Анкета отправлена!',
+        success_text_job: 'Ваша анкета на модерации. После проверки она появится в разделе «Ищу работу».',
+        success_btn: 'Отлично',
+
         // Premium
         premium_badge: 'PREMIUM',
 
@@ -182,6 +189,13 @@ const translations = {
         toast_favorite_added: 'Added to favorites',
         toast_favorite_removed: 'Removed from favorites',
         toast_error: 'An error occurred',
+
+        // Success screen
+        success_title: 'Listing submitted!',
+        success_text: 'Your listing is under review. It will appear in the catalog after approval.',
+        success_title_job: 'Profile submitted!',
+        success_text_job: 'Your profile is under review. It will appear in the Find Work section after approval.',
+        success_btn: 'Great',
 
         // Premium
         premium_badge: 'PREMIUM',

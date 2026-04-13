@@ -344,9 +344,10 @@ function closeJobModal() {
 
 async function filterJobs() {
     const category = document.getElementById('job-category-filter').value;
+    const search = document.getElementById('job-search-input')?.value || '';
 
     try {
-        const result = await getJobs(category);
+        const result = await getJobs(category, search);
         renderJobs(result.data || []);
     } catch (error) {
         console.error('Failed to filter jobs:', error);
@@ -384,7 +385,6 @@ async function submitListing(event) {
             user: getTelegramUser()
         });
 
-        showToast(t('toast_listing_created'), 'success');
         document.getElementById('create-listing-form').reset();
         document.getElementById('listing-avatar-preview').innerHTML = `
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
@@ -393,8 +393,14 @@ async function submitListing(event) {
                 <polyline points="21 15 16 10 5 21"></polyline>
             </svg>
         `;
+        showSuccess('listing');
     } catch (error) {
-        showToast(t('toast_error'), 'error');
+        const msg = error.message || '';
+        if (msg.includes('максимальное')) {
+            showToast(msg, 'error');
+        } else {
+            showToast(t('toast_error'), 'error');
+        }
     }
 }
 
@@ -416,11 +422,35 @@ async function submitJob(event) {
             user: getTelegramUser()
         });
 
-        showToast('Заявка отправлена на модерацию', 'success');
         document.getElementById('create-job-form').reset();
+        showSuccess('job');
     } catch (error) {
-        showToast(t('toast_error'), 'error');
+        const msg = error.message || '';
+        if (msg.includes('максимальное')) {
+            showToast(msg, 'error');
+        } else {
+            showToast(t('toast_error'), 'error');
+        }
     }
+}
+
+function showSuccess(type) {
+    const screen = document.getElementById('success-screen');
+    const title = document.getElementById('success-title');
+    const text = document.getElementById('success-text');
+    if (type === 'job') {
+        title.textContent = t('success_title_job') || 'Анкета отправлена!';
+        text.textContent = t('success_text_job') || 'Ваша анкета отправлена на модерацию. После проверки она появится в разделе «Ищу работу».';
+    } else {
+        title.textContent = t('success_title') || 'Заявка отправлена!';
+        text.textContent = t('success_text') || 'Ваша заявка отправлена на модерацию. После проверки она появится в каталоге.';
+    }
+    screen.classList.remove('hidden');
+}
+
+function closeSuccess() {
+    document.getElementById('success-screen').classList.add('hidden');
+    switchTab('exchange');
 }
 
 // Listing detail

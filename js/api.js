@@ -99,9 +99,10 @@ async function getListing(id) {
 }
 
 // Jobs
-async function getJobs(category = 'all') {
+async function getJobs(category = 'all', search = '') {
     const params = new URLSearchParams();
     if (category !== 'all') params.append('category', category);
+    if (search) params.append('search', search);
     return apiRequest(`/jobs?${params.toString()}`);
 }
 
