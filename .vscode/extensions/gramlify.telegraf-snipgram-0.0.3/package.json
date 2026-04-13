@@ -1,0 +1,51 @@
+{
+	"name": "telegraf-snipgram",
+	"displayName": "Telegraf Snipgram",
+	"description": "A snippet pack to make you more productive working with Telegraf.js",
+	"version": "0.0.3",
+	"publisher": "gramlify",
+	"bugs": {
+		"url": "https://github.com/gramlify/telegraf-snipgram/issues"
+	},
+	"homepage": "https://github.com/gramlify/telegraf-snipgram#readme",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/gramlify/telegraf-snipgram/"
+	},
+	"license": "MIT",
+	"icon": "telegraf-icon.png",
+	"engines": {
+		"vscode": "^0.11.x"
+	},
+	"categories": [
+		"Snippets"
+	],
+	"keywords": [
+		"Telegram",
+		"Library",
+		"Telegraf"
+	],
+	"contributes": {
+		"snippets": [
+			{
+				"language": "javascript",
+				"path": "./telegraf.json"
+			},
+			{
+				"language": "typescript",
+				"path": "./telegraf.json"
+			}
+		]
+	},
+	"__metadata": {
+		"id": "ec332677-9ea3-42cc-b215-c1d4b9e8b005",
+		"publisherId": "1e0fc6c6-78ea-4051-847b-3cc1c8dd3eba",
+		"publisherDisplayName": "Gramlify",
+		"targetPlatform": "undefined",
+		"updated": false,
+		"isPreReleaseVersion": false,
+		"installedTimestamp": 1700498841649,
+		"preRelease": false,
+		"size": 137987
+	}
+}

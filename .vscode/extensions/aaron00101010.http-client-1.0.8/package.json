@@ -1,0 +1,126 @@
+{
+	"name": "http-client",
+	"displayName": "Http Client",
+	"description": "A extension for http request,http api test",
+	"version": "1.0.8",
+	"icon": "icon.png",
+	"publisher": "Aaron00101010",
+	"repository": "https://github.com/r23qw/vscode-http-client",
+	"license": "MIT",
+	"engines": {
+		"vscode": "^1.46.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"keywords": [
+		"http client",
+		"api client",
+		"rest client",
+		"postman like",
+		"api test"
+	],
+	"activationEvents": [
+		"onStartupFinished"
+	],
+	"main": "./dist/extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "http-client.OpenHttpClient",
+				"title": "Http Client: Open Http Client"
+			}
+		]
+	},
+	"scripts": {
+		"vscode:prepublish": "yarn run package:view && yarn run package",
+		"compile": "webpack --config ./build/node-extension.webpack.config.js",
+		"watch": "run-p watch:* -l",
+		"watch:ext": "webpack --watch --config ./build/node-extension.webpack.config.js",
+		"watch:view": "webpack --watch --mode development --config ./build/view.webpack.config.js",
+		"dev:view": "webpack serve --config ./build/view-dev.webpack.config.js",
+		"package": "webpack --mode production --devtool hidden-source-map --config ./build/node-extension.webpack.config.js",
+		"package:view": "NODE_ENV=production webpack --mode production --devtool hidden-source-map --config ./build/view.webpack.config.js",
+		"test-compile": "tsc -p ./",
+		"test-watch": "tsc -watch -p ./",
+		"pretest": "yarn run test-compile && yarn run lint",
+		"lint": "eslint src --ext ts,js,tsx",
+		"test": "node ./out/test/runTest.js"
+	},
+	"devDependencies": {
+		"@types/glob": "^7.1.3",
+		"@types/lodash": "^4.14.170",
+		"@types/mocha": "^8.0.4",
+		"@types/node": "^12.11.7",
+		"@types/react": "^17.0.5",
+		"@types/react-custom-scrollbars": "^4.0.7",
+		"@types/react-dom": "^17.0.3",
+		"@types/react-router-dom": "^5.1.7",
+		"@types/set-cookie-parser": "^2.4.0",
+		"@types/url-parse": "^1.4.3",
+		"@types/vscode": "^1.46.0",
+		"@types/yargs": "^16.0.2",
+		"@typescript-eslint/eslint-plugin": "^4.9.0",
+		"@typescript-eslint/parser": "^4.9.0",
+		"antd-dayjs-webpack-plugin": "^1.0.6",
+		"css-loader": "^5.2.2",
+		"dayjs": "^1.10.5",
+		"eslint": "^7.15.0",
+		"eslint-config-prettier": "^8.2.0",
+		"eslint-plugin-prettier": "^3.4.0",
+		"eslint-plugin-react": "^7.23.2",
+		"express": "^4.17.1",
+		"glob": "^7.1.7",
+		"html-webpack-plugin": "^5.3.1",
+		"mini-css-extract-plugin": "^1.6.0",
+		"mocha": "^8.1.3",
+		"npm-run-all": "^4.1.5",
+		"prettier": "^2.2.1",
+		"purgecss-webpack-plugin": "^4.0.3",
+		"style-loader": "^2.0.0",
+		"ts-loader": "^9.0.0",
+		"tsconfig-paths-webpack-plugin": "^3.5.1",
+		"typescript": "^4.1.2",
+		"vscode-test": "^1.4.1",
+		"webpack": "^5.33.2",
+		"webpack-bundle-analyzer": "^4.4.2",
+		"webpack-cli": "^4.6.0",
+		"webpack-dev-middleware": "^4.1.0",
+		"webpack-dev-server": "^3.11.2",
+		"webpack-merge": "^5.7.3",
+		"yarn": "^1.22.10"
+	},
+	"dependencies": {
+		"@ant-design/icons": "^4.6.2",
+		"@monaco-editor/react": "^4.1.3",
+		"@types/cookie": "^0.4.0",
+		"@types/react-redux": "^7.1.18",
+		"@types/uuid": "^8.3.0",
+		"antd": "^4.16.0",
+		"axios": "^0.21.1",
+		"cookie": "^0.4.1",
+		"lodash": "^4.17.21",
+		"querystring": "^0.2.1",
+		"react": "^17.0.2",
+		"react-custom-scrollbars": "^4.2.1",
+		"react-dom": "^17.0.2",
+		"react-redux": "^7.2.4",
+		"react-split-pane": "^0.1.92",
+		"redux-thunk": "^2.3.0",
+		"set-cookie-parser": "^2.4.8",
+		"url-parse": "^1.5.1",
+		"uuid": "^8.3.2",
+		"yargs": "^17.0.1"
+	},
+	"__metadata": {
+		"id": "0826eac2-7228-4abb-a142-24f449b5bbeb",
+		"publisherId": "f349e3c4-6fdb-4a12-9386-9646f4aa785c",
+		"publisherDisplayName": "!Aar0n",
+		"targetPlatform": "undefined",
+		"updated": false,
+		"isPreReleaseVersion": false,
+		"installedTimestamp": 1700501630499,
+		"preRelease": false,
+		"size": 6236961
+	}
+}

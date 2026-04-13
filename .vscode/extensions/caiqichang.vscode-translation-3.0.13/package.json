@@ -1,0 +1,172 @@
+{
+	"name": "vscode-translation",
+	"displayName": "Translator",
+	"description": "A translation tool for Visual Studio Code.",
+	"publisher": "caiqichang",
+	"version": "3.0.13",
+	"engines": {
+		"vscode": "^1.85.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"keywords": [
+		"translate",
+		"translation"
+	],
+	"icon": "resources/logo.png",
+	"extensionKind": [
+		"ui",
+		"workspace"
+	],
+	"capabilities": {
+		"untrustedWorkspaces": {
+			"supported": true
+		}
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/caiqichang/vscode-translation"
+	},
+	"main": "out/extension.js",
+	"activationEvents": [
+		"onStartupFinished"
+	],
+	"contributes": {
+		"configuration": {
+			"title": "Translation",
+			"properties": {
+				"translation.source-language": {
+					"description": "Default source language for translation.",
+					"type": "string",
+					"default": "auto"
+				},
+				"translation.target-language": {
+					"description": "Default target language for translation.",
+					"type": "string",
+					"default": "en"
+				},
+				"translation.simple-display-mode": {
+					"description": "Specifies how to display the result of simple translation.",
+					"type": "string",
+					"enum": [
+						"notification",
+						"statusBar"
+					],
+					"default": "notification"
+				},
+				"translation.max-history": {
+					"description": "Max size of history.",
+					"type": "number",
+					"default": 20
+				},
+				"translation.translation-api-provider": {
+					"description": "Specifies the translation api provider. (Google or Microsoft)",
+					"type": "string",
+					"enum": [
+						"Google",
+						"Microsoft"
+					],
+					"default": "Google"
+				},
+				"translation.voice-api-provider": {
+					"description": "Specifies the voice api provider. (Google or Microsoft)",
+					"type": "string",
+					"enum": [
+						"Google",
+						"Microsoft"
+					],
+					"default": "Google"
+				},
+				"translation.auto-translate-hovering": {
+					"description": "Enable/Disable translating the selected text when mouse hovering automatically.",
+					"type": "boolean",
+					"default": true
+				}
+			}
+		},
+		"commands": [
+			{
+				"command": "simpleTranslate",
+				"title": "Simple Translate"
+			},
+			{
+				"command": "completeTranslate",
+				"title": "Complete Translate"
+			},
+			{
+				"command": "translation",
+				"title": "Translation"
+			}
+		],
+		"menus": {
+			"commandPalette": [
+				{
+					"command": "simpleTranslate",
+					"when": "false"
+				},
+				{
+					"command": "completeTranslate",
+					"when": "false"
+				}
+			],
+			"editor/context": [
+				{
+					"command": "simpleTranslate",
+					"when": "editorHasSelection",
+					"group": "0_translation@0"
+				},
+				{
+					"command": "completeTranslate",
+					"when": "editorHasSelection",
+					"group": "0_translation@1"
+				}
+			]
+		},
+		"keybindings": [
+			{
+				"command": "simpleTranslate",
+				"when": "editorHasSelection",
+				"key": "shift+alt+y"
+			},
+			{
+				"command": "completeTranslate",
+				"when": "editorHasSelection",
+				"key": "shift+alt+t"
+			}
+		]
+	},
+	"scripts": {
+		"prepackage": "node script/pre-package.js && npm run compile",
+		"package": "npx --package @vscode/vsce vsce package -o build/",
+		"compile": "tsc --project ./",
+		"watch": "tsc --watch --project ./"
+	},
+	"devDependencies": {
+		"@types/node": "^20.11.5",
+		"@types/vscode": "^1.85.0",
+		"@types/ws": "^8.5.10",
+		"typescript": "^5.3.3"
+	},
+	"dependencies": {
+		"@vscode/codicons": "^0.0.35",
+		"@vscode/webview-ui-toolkit": "^1.4.0",
+		"vue": "^3.4.15",
+		"ws": "^8.17.0"
+	},
+	"__metadata": {
+		"id": "e6583333-05c7-41d4-8f9a-bc65dbc2f69e",
+		"publisherId": "3a336f47-2955-4aaf-a978-61a33fa76d2b",
+		"publisherDisplayName": "caiqichang",
+		"targetPlatform": "undefined",
+		"isApplicationScoped": false,
+		"updated": true,
+		"isPreReleaseVersion": false,
+		"hasPreReleaseVersion": false,
+		"installedTimestamp": 1718313252901,
+		"pinned": false,
+		"preRelease": false,
+		"source": "gallery",
+		"size": 1890236
+	}
+}

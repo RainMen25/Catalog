@@ -1,0 +1,10 @@
+[user]
+	email = 8cctq5y6ty@privaterelay.appleid.com
+	name = Tra123132
+[gui]
+	recentrepo = C:/Users/Admin/tarot_webapp_all_78_cards
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
