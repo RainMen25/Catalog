@@ -33,7 +33,7 @@
             <!-- Header -->
             <header class="app-header">
                 <div class="header-left">
-                    <span class="logo-small">🔥</span>
+                    <img src="images/photo_2026-03-22_00-10-56.jpg" class="header-logo" alt="OFB">
                     <span class="app-title">OFB Catalog</span>
                 </div>
                 <div class="header-right">
@@ -241,18 +241,17 @@
                 <!-- Chat Tab -->
                 <div id="chat-tab" class="tab-pane hidden">
                     <div style="padding: 20px; text-align: center;">
-                        <div style="background: var(--bg-card); border: 1px solid var(--accent); border-radius: var(--radius); padding: 30px 20px; margin-bottom: 20px; box-shadow: var(--premium-glow);">
-                            <div style="font-size: 50px; margin-bottom: 15px;">💬</div>
-                            <h3 style="color: var(--accent); margin-bottom: 10px;">Чат каталога OFB</h3>
-                            <p style="color: var(--text-secondary); margin-bottom: 20px; line-height: 1.6;">
+                        <div class="chat-join-card">
+                            <img src="images/photo_2026-03-22_00-10-56.jpg" class="chat-logo" alt="OFB Catalog">
+                            <h3 class="chat-title">Чат каталога OFB</h3>
+                            <p class="chat-subtitle">
                                 Присоединяйтесь к нашему чату!<br>
-                                Здесь вы получите уведомления о новых заявках.
+                                Уведомления о новых заявках, общение, новости.
                             </p>
-                            <button onclick="window.open('https://t.me/+2alG6icwGhtkNzVi', '_blank')" style="
-                                width: 100%; padding: 16px; background: var(--accent); border: none;
-                                border-radius: var(--radius-sm); color: #000; font-size: 16px;
-                                font-weight: 600; cursor: pointer; display: flex;
-                                align-items: center; justify-content: center; gap: 10px;">
+                            <button onclick="window.open('https://t.me/+2alG6icwGhtkNzVi', '_blank')" class="chat-join-btn">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z"/>
+                                </svg>
                                 Вступить в чат
                             </button>
                         </div>

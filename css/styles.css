@@ -1636,3 +1636,101 @@ body {
     margin-bottom: 30px;
 }
 
+/* ── Header logo ─────────────────────────────────────────────── */
+.header-logo {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--accent);
+}
+
+/* ── Chat join card ───────────────────────────────────────────── */
+.chat-join-card {
+    background: var(--bg-card);
+    border: 1px solid var(--accent);
+    border-radius: 20px;
+    padding: 32px 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--premium-glow);
+    text-align: center;
+}
+.chat-logo {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--accent);
+    margin-bottom: 18px;
+    box-shadow: 0 0 20px rgba(0,212,170,0.4);
+}
+.chat-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 10px;
+}
+.chat-subtitle {
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.7;
+    margin-bottom: 22px;
+}
+.chat-join-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: #000;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: var(--transition);
+}
+.chat-join-btn:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+}
+
+/* ── Listing cards redesign ───────────────────────────────────── */
+.listing-card {
+    border-radius: 16px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    overflow: hidden;
+}
+.listing-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.listing-card.is-premium {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 16px rgba(0,212,170,0.2) !important;
+}
+
+/* ── Category pills ───────────────────────────────────────────── */
+.category-btn {
+    border-radius: 20px !important;
+    font-size: 13px !important;
+    padding: 7px 16px !important;
+    font-weight: 500 !important;
+    transition: var(--transition) !important;
+}
+.category-btn.active {
+    background: var(--accent) !important;
+    color: #000 !important;
+    font-weight: 700 !important;
+}
+
+/* ── Tab nav icons ────────────────────────────────────────────── */
+.tab-btn-create {
+    background: var(--accent) !important;
+    color: #000 !important;
+    font-weight: 700 !important;
+    border-radius: 12px !important;
+}
+
