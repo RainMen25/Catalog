@@ -765,7 +765,7 @@ body {
     padding: 16px;
     margin-bottom: 20px;
     line-height: 1.6;
-    color: var(--text-secondary);
+    color: #ffffff !important;
 }
 
 .detail-actions {
@@ -1751,6 +1751,15 @@ body {
 }
 
 
+/* ── listing-footer-right ─────────────────────────────────────────── */
+.listing-footer-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    overflow: hidden;
+}
+
 /* ── Compact grid view ────────────────────────────────────────────── */
 .listings-grid.compact {
     display: grid !important;
@@ -1762,31 +1771,52 @@ body {
     padding: 10px !important;
 }
 .listings-grid.compact .listing-avatar {
-    width: 36px !important;
-    height: 36px !important;
-    min-width: 36px !important;
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
 }
 .listings-grid.compact .listing-name {
     font-size: 12px !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
-    max-width: 100px !important;
+    max-width: 120px !important;
 }
 .listings-grid.compact .listing-description {
+    display: -webkit-box !important;
     -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
     font-size: 11px !important;
-    max-height: 2.4em !important;
+    max-height: 3em !important;
 }
 .listings-grid.compact .listing-category {
     font-size: 10px !important;
 }
 .listings-grid.compact .listing-footer {
     font-size: 11px !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+}
+.listings-grid.compact .listing-footer-right {
+    flex-wrap: nowrap !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+}
+.listings-grid.compact .listing-telegram {
+    font-size: 10px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    max-width: 90px !important;
+}
+.listings-grid.compact .listing-views {
+    font-size: 10px !important;
+    white-space: nowrap !important;
 }
 .listings-grid.compact .favorite-btn {
-    width: 28px !important;
-    height: 28px !important;
+    width: 26px !important;
+    height: 26px !important;
     top: 6px !important;
     right: 6px !important;
 }
@@ -1806,4 +1836,34 @@ body {
 .listing-views {
     font-size: 11px;
     color: rgba(255,255,255,0.45);
+    white-space: nowrap;
+}
+
+/* ── Force white text everywhere in detail + modals ──────────────── */
+#listing-detail,
+#listing-detail *:not(button):not(.scam-badge-small):not(.verified-badge):not(.premium-badge) {
+    color: #ffffff !important;
+}
+#listing-detail .listing-category,
+.detail-info .detail-category {
+    color: rgba(255,255,255,0.6) !important;
+}
+#listing-detail .detail-description,
+.detail-description {
+    color: #ffffff !important;
+}
+.review-text {
+    color: rgba(255,255,255,0.85) !important;
+}
+.review-author {
+    color: #ffffff !important;
+}
+.review-date {
+    color: rgba(255,255,255,0.5) !important;
+}
+.modal-card p,
+.modal-card span,
+.modal-card div,
+.modal-card h3 {
+    color: #ffffff !important;
 }

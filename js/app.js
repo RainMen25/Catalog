@@ -152,8 +152,9 @@ function createListingCard(listing, isPremium) {
 
     const availableBadge = (listing.is_available === 1 || listing.is_available === undefined)
         ? `<span class="available-badge">🟢 Открыт к работе</span>` : '';
-    const viewsHtml = listing.views > 0
-        ? `<span class="listing-views">👁 ${listing.views}</span>` : '';
+    const viewCount = listing.views > 0 ? listing.views : '';
+    // Strip https://t.me/ or t.me/ prefix from telegram handle
+    const telegramHandle = (listing.telegram || '').replace(/^https?:\/\/(t\.me|telegram\.me)\//i, '').replace(/^@/, '');
 
     card.innerHTML = `
         ${isPremium ? `<span class="premium-badge">${t('premium_badge')}</span>` : ''}
@@ -180,9 +181,9 @@ function createListingCard(listing, isPremium) {
                 <span>${heartsHtml}</span>
                 <span>${listing.is_scam ? '-' : rating}</span>
             </div>
-            <div style="display:flex;align-items:center;gap:8px;">
-                ${viewsHtml}
-                <span class="listing-telegram">@${listing.telegram}</span>
+            <div class="listing-footer-right">
+                ${viewCount ? `<span class="listing-views">👁 ${viewCount}</span>` : ''}
+                <span class="listing-telegram">@${telegramHandle}</span>
             </div>
         </div>
     `;
