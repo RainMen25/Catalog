@@ -174,6 +174,7 @@
             <li><a data-tab="users" onclick="goTab('users')"><span class="ico">&#128100;</span><span>Пользователи</span></a></li>
             <li><a data-tab="notifications" onclick="goTab('notifications')"><span class="ico">&#128276;</span><span>Уведомления</span></a></li>
             <li><a data-tab="posts" onclick="goTab('posts')"><span class="ico">&#128204;</span><span>Посты</span></a></li>
+            <li><a data-tab="settings" onclick="goTab('settings')"><span class="ico">&#9881;</span><span>Настройки</span></a></li>
         </ul>
         <div class="sidebar-logout">
             <button onclick="doLogout()">&#128275; Выйти</button>
@@ -185,6 +186,7 @@
         <section id="tab-dashboard" class="tab active">
             <div class="tab-head"><h2>&#128202; Дашборд</h2><button class="btn btn-ok" onclick="loadDashboard()">&#8635; Обновить</button></div>
             <div class="stats" id="statsGrid"></div>
+            <div id="visitStatsBlock"></div>
         </section>
 
         <!-- Pending -->
@@ -280,6 +282,39 @@
             <h3 style="color:#fff;font-size:14px;margin-bottom:12px;">История постов</h3>
             <div id="postsGrid"></div>
         </section>
+
+        <!-- Settings -->
+        <section id="tab-settings" class="tab">
+            <div class="tab-head"><h2>&#9881; Настройки</h2><button class="btn btn-ok" onclick="loadSettings()">&#8635; Обновить</button></div>
+
+            <!-- Webhook -->
+            <div class="notif-form" style="margin-bottom:20px;">
+                <h3 style="margin-bottom:14px;">🔗 Telegram Webhook</h3>
+                <p style="color:#8b949e;font-size:13px;margin-bottom:12px;">Нужен для работы приветственных сообщений. Нажми один раз после деплоя.</p>
+                <button class="btn btn-ok" onclick="setupWebhook()" style="width:100%;">⚡ Установить Webhook</button>
+                <div id="webhookStatus" style="margin-top:8px;font-size:12px;color:#8b949e;"></div>
+            </div>
+
+            <!-- Welcome message -->
+            <div class="notif-form" style="margin-bottom:20px;">
+                <h3 style="margin-bottom:14px;">👋 Приветствие новых участников</h3>
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
+                        <input type="checkbox" id="welcomeEnabled" style="width:18px;height:18px;accent-color:#00d4aa;" onchange="saveWelcomeToggle()">
+                        Включить автоприветствие
+                    </label>
+                </div>
+                <label style="font-size:11px;color:#8b949e;display:block;margin-bottom:6px;">
+                    Текст приветствия <span style="color:#555;">(HTML: &lt;b&gt;, &lt;i&gt;, поддерживается)</span>
+                </label>
+                <textarea id="welcomeText" rows="10" style="min-height:200px;resize:vertical;margin-bottom:10px;font-family:monospace;font-size:13px;"></textarea>
+                <div style="display:flex;gap:8px;">
+                    <button class="btn btn-ok" onclick="saveSettings()" style="flex:1;">💾 Сохранить</button>
+                    <button class="btn" onclick="resetWelcome()" style="background:#21262d;border:1px solid #30363d;flex:1;">↩ Сбросить к дефолту</button>
+                </div>
+                <p style="color:#8b949e;font-size:11px;margin-top:8px;">Переменные: <code style="background:#0d1117;padding:1px 4px;border-radius:3px;">{name}</code> — имя участника, <code style="background:#0d1117;padding:1px 4px;border-radius:3px;">{username}</code> — @username</p>
+            </div>
+        </section>
     </main>
 </div>
 
@@ -341,7 +376,7 @@ function goTab(name) {
     document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
     document.getElementById('tab-' + name).classList.add('active');
     document.querySelector(`[data-tab="${name}"]`).classList.add('active');
-    const loaders = { dashboard: loadDashboard, pending: loadPending, listings: loadListings, jobs: loadJobs, complaints: loadComplaints, users: loadUsers, notifications: loadNotifications, posts: loadPosts };
+    const loaders = { dashboard: loadDashboard, pending: loadPending, listings: loadListings, jobs: loadJobs, complaints: loadComplaints, users: loadUsers, notifications: loadNotifications, posts: loadPosts, settings: loadSettings };
     if (loaders[name]) loaders[name]();
 }
 
@@ -405,8 +440,7 @@ function renderStats(d) {
         <div class="stat red"><div class="lbl">Жалобы</div><div class="val">${d.complaints ?? 0}</div></div>
         <div class="stat"><div class="lbl">SCAM</div><div class="val">${d.scam ?? 0}</div></div>
     `;
-    // Visit stats block
-    const visitHtml = `
+    document.getElementById('visitStatsBlock').innerHTML = `
         <div style="margin-top:20px;">
             <h3 style="color:#fff;font-size:15px;margin-bottom:12px;">📊 Аналитика посещений</h3>
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">
@@ -420,7 +454,6 @@ function renderStats(d) {
             <p style="color:#8b949e;font-size:11px;margin-top:8px;">Уникальные — разные пользователи (по ID). Все визиты — суммарные заходы тех же пользователей.</p>
         </div>
     `;
-    document.getElementById('tab-dashboard').insertAdjacentHTML('beforeend', visitHtml);
 }
 
 /* ========== LISTING CARD ========== */
@@ -811,6 +844,58 @@ function previewPost(id) {
         </div>
     `;
     document.getElementById('modalBg').classList.add('open');
+}
+
+/* ========== SETTINGS ========== */
+const DEFAULT_WELCOME = `👋 <b>{name}</b>, добро пожаловать в <b>OFB | OnlyFans Board</b>!
+
+📌 Здесь ты можешь:
+✅ Размещать объявления — модели, агентства, чаттеры
+✅ Находить специалистов — фотографы, видеографы, SMM, менеджеры
+✅ Публиковать резюме в разделе «Ищу работу»
+
+⚠️ <b>Только тематика OnlyFans.</b> Реклама не по теме = бан.
+
+🆓 Размещение бесплатное
+⭐ Премиум — карточка в ТОПе 3 месяца
+
+👉 Открывай каталог и размещай заявку прямо сейчас!`;
+
+async function loadSettings() {
+    const d = await api('/api/admin/settings');
+    if (!d) return;
+    document.getElementById('welcomeEnabled').checked = d.welcome_enabled === '1';
+    document.getElementById('welcomeText').value = d.welcome_text || DEFAULT_WELCOME;
+}
+
+async function saveSettings() {
+    const text = document.getElementById('welcomeText').value.trim();
+    const enabled = document.getElementById('welcomeEnabled').checked;
+    const r = await api('/api/admin/settings', 'PUT', {
+        welcome_enabled: enabled ? '1' : '0',
+        welcome_text: text || DEFAULT_WELCOME
+    });
+    if (r !== null) toast('Настройки сохранены');
+}
+
+async function saveWelcomeToggle() {
+    const enabled = document.getElementById('welcomeEnabled').checked;
+    await api('/api/admin/settings', 'PUT', { welcome_enabled: enabled ? '1' : '0' });
+    toast(enabled ? 'Приветствие включено' : 'Приветствие выключено');
+}
+
+function resetWelcome() {
+    document.getElementById('welcomeText').value = DEFAULT_WELCOME;
+    toast('Текст сброшен. Нажми «Сохранить»');
+}
+
+async function setupWebhook() {
+    const el = document.getElementById('webhookStatus');
+    el.textContent = 'Устанавливаю...';
+    const r = await api('/api/admin/setup-webhook', 'POST');
+    if (!r) { el.textContent = '❌ Ошибка'; return; }
+    el.textContent = r.ok ? '✅ Webhook установлен: ' + (r.url || '') : '❌ ' + (r.description || 'Ошибка');
+    el.style.color = r.ok ? '#00d4aa' : '#f85149';
 }
 
 /* ========== INIT ========== */

@@ -397,7 +397,7 @@ async function submitListing(event) {
     } catch (error) {
         const msg = error.message || '';
         if (msg.includes('максимальное')) {
-            showToast(msg, 'error');
+            showLimitModal();
         } else {
             showToast(t('toast_error'), 'error');
         }
@@ -427,7 +427,7 @@ async function submitJob(event) {
     } catch (error) {
         const msg = error.message || '';
         if (msg.includes('максимальное')) {
-            showToast(msg, 'error');
+            showLimitModal();
         } else {
             showToast(t('toast_error'), 'error');
         }
@@ -876,6 +876,40 @@ function shareListing() {
     } else {
         navigator.clipboard.writeText(text).then(() => showToast('Скопировано!', 'success'));
     }
+}
+
+// Limit modal — contact admin to increase
+function showLimitModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 400px;">
+            <div style="padding: 30px; text-align: center;">
+                <div style="font-size: 56px; margin-bottom: 16px;">📋</div>
+                <h3 style="margin-bottom: 10px; font-size: 18px;">Лимит заявок исчерпан</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 8px; line-height: 1.6;">
+                    Вы уже разместили максимальное количество объявлений.
+                </p>
+                <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 14px;">
+                    Для увеличения лимита — напишите администратору. Мы рассмотрим вашу заявку в течение нескольких часов.
+                </p>
+                <button onclick="window.open('https://t.me/ValentinOnlyFans', '_blank')" style="
+                    width: 100%; padding: 14px; background: var(--accent); border: none;
+                    border-radius: var(--radius-sm); color: #000; font-size: 15px;
+                    font-weight: 600; cursor: pointer; margin-bottom: 10px;">
+                    ✍️ Написать администратору
+                </button>
+                <button onclick="this.closest('.modal-overlay').remove()" style="
+                    width: 100%; padding: 12px; background: var(--bg-input);
+                    border: 1px solid var(--border); border-radius: var(--radius-sm);
+                    color: var(--text-primary); cursor: pointer; font-size: 14px;">
+                    Закрыть
+                </button>
+            </div>
+        </div>
+    `;
+    modal.onclick = () => modal.remove();
+    document.body.appendChild(modal);
 }
 
 // Premium popup for limit
