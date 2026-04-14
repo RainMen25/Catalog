@@ -103,8 +103,9 @@ async function getListings(category = 'all', search = '') {
     return apiRequest(`/listings?${params.toString()}`);
 }
 
-async function getPremiumListings() {
-    return apiRequest('/listings/premium');
+async function getPremiumListings(category = 'all') {
+    const params = category && category !== 'all' ? `?category=${category}` : '';
+    return apiRequest(`/listings/premium${params}`);
 }
 
 async function createListing(data) {

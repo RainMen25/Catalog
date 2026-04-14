@@ -322,19 +322,12 @@ async function filterListings() {
     const search = document.getElementById('search-input').value;
 
     try {
-        if (category === 'all' && !search) {
-            // Show premium + regular with section headings
-            const [premium, regular] = await Promise.all([
-                getPremiumListings(),
-                getListings()
-            ]);
-            renderAllListings(premium.data || [], regular.data || []);
-            listingsData = [...(premium.data || []), ...(regular.data || [])];
-        } else {
-            // Filtered view — no premium section, just matching results
-            const result = await getListings(category, search);
-            renderListings(result.data || []);
-        }
+        const [premium, regular] = await Promise.all([
+            getPremiumListings(category),
+            getListings(category, search)
+        ]);
+        renderAllListings(premium.data || [], regular.data || []);
+        listingsData = [...(premium.data || []), ...(regular.data || [])];
     } catch (error) {
         console.error('Failed to filter listings:', error);
     }
