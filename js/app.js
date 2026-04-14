@@ -152,21 +152,41 @@ async function loadListings() {
             getListings()
         ]);
 
-        renderPremiumListings(premium.data || []);
-        renderListings(regular.data || []);
+        renderAllListings(premium.data || [], regular.data || []);
         listingsData = [...(premium.data || []), ...(regular.data || [])];
     } catch (error) {
         console.error('Failed to load listings:', error);
     }
 }
 
-function renderPremiumListings(listings) {
-    const container = document.getElementById('premium-listings');
+function renderAllListings(premiumListings, regularListings) {
+    const container = document.getElementById('listings-container');
+    const noResults = document.getElementById('no-listings');
+
     container.innerHTML = '';
 
-    listings.forEach(listing => {
-        container.appendChild(createListingCard(listing, true));
-    });
+    const total = premiumListings.length + regularListings.length;
+    if (total === 0) {
+        noResults.classList.remove('hidden');
+        return;
+    }
+    noResults.classList.add('hidden');
+
+    if (premiumListings.length > 0) {
+        const heading = document.createElement('div');
+        heading.className = 'section-heading premium-heading';
+        heading.textContent = '⭐ ПРЕМИУМ';
+        container.appendChild(heading);
+        premiumListings.forEach(listing => container.appendChild(createListingCard(listing)));
+    }
+
+    if (regularListings.length > 0) {
+        const heading = document.createElement('div');
+        heading.className = 'section-heading';
+        heading.textContent = '📋 ВСЕ ОБЪЯВЛЕНИЯ';
+        container.appendChild(heading);
+        regularListings.forEach(listing => container.appendChild(createListingCard(listing)));
+    }
 }
 
 function renderListings(listings) {
@@ -182,13 +202,13 @@ function renderListings(listings) {
 
     noResults.classList.add('hidden');
     listings.forEach(listing => {
-        container.appendChild(createListingCard(listing, false));
+        container.appendChild(createListingCard(listing));
     });
 }
 
-function createListingCard(listing, isPremium) {
+function createListingCard(listing) {
     const card = document.createElement('div');
-    card.className = `listing-card${listing.is_scam ? ' scam' : ''}${isPremium ? ' premium-card' : ''}`;
+    card.className = `listing-card${listing.is_scam ? ' scam' : ''}`;
 
     const avatarHtml = listing.avatar
         ? `<img src="${listing.avatar}" alt="${listing.name}">`
@@ -227,7 +247,6 @@ function createListingCard(listing, isPremium) {
     const telegramHandle = (listing.telegram || '').replace(/^https?:\/\/(t\.me|telegram\.me)\//i, '').replace(/^@/, '');
 
     card.innerHTML = `
-        ${isPremium ? `<span class="premium-badge">${t('premium_badge')}</span>` : ''}
         <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavoriteAction(${listing.id})">
             <svg viewBox="0 0 24 24" stroke-width="2">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
@@ -1164,7 +1183,7 @@ function renderFavorites(favorites) {
 
     noResults.classList.add('hidden');
     favorites.forEach(listing => {
-        const card = createListingCard(listing, false);
+        const card = createListingCard(listing);
         container.appendChild(card);
     });
 }
