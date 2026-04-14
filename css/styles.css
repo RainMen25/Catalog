@@ -307,8 +307,15 @@ body {
 /* Filters */
 .filters {
     display: flex;
-    gap: 10px;
-    margin-bottom: 16px;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.filters > div {
+    display: flex;
+    gap: 8px;
+    align-items: center;
 }
 
 .filters select,
