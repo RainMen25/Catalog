@@ -9,8 +9,25 @@
 </head>
 <body>
     <div id="app">
+        <!-- Telegram Auth Screen (shown only when NOT in Telegram WebApp) -->
+        <div id="tg-auth-screen" class="screen hidden" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:30px;text-align:center;">
+            <div style="margin-bottom:32px;">
+                <div style="font-size:64px;margin-bottom:16px;">🔥</div>
+                <h1 style="font-size:24px;font-weight:700;color:var(--accent);margin-bottom:8px;">OFB Catalog</h1>
+                <p style="color:var(--text-secondary);font-size:15px;line-height:1.6;max-width:280px;">
+                    Биржа услуг OnlyFans<br>
+                    Войдите через Telegram для доступа
+                </p>
+            </div>
+            <div id="tg-login-widget" style="margin-bottom:24px;"></div>
+            <p style="color:var(--text-muted);font-size:12px;max-width:260px;line-height:1.6;">
+                Telegram ID используется только для идентификации.<br>
+                Мы не рассылаем спам.
+            </p>
+        </div>
+
         <!-- Language Selection -->
-        <div id="language-screen" class="screen active">
+        <div id="language-screen" class="screen hidden">
             <div class="logo">
                 <div class="logo-icon">🔥</div>
                 <h1>OFB Catalog</h1>

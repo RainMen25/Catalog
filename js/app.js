@@ -6,7 +6,64 @@ let favoritesData = [];
 let subscribedCategories = new Set();
 let isCompactView = localStorage.getItem('ofb_compact') === '1';
 
-// Initialize app
+// ── Telegram Widget Auth callback (called by the widget script) ───────────────
+window.onTelegramWidgetAuth = async function(user) {
+    try {
+        const res = await fetch('https://ofb-catalog-api.8cctq5y6ty.workers.dev/api/auth/telegram', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(user)
+        });
+        const result = await res.json();
+        if (result.ok) {
+            localStorage.setItem('ofb_tg_widget_auth', JSON.stringify(user));
+            showAfterAuth();
+        } else {
+            showToast('Ошибка авторизации. Попробуйте снова.', 'error');
+        }
+    } catch {
+        // Network error — still allow in (graceful degradation)
+        localStorage.setItem('ofb_tg_widget_auth', JSON.stringify(user));
+        showAfterAuth();
+    }
+};
+
+function showAfterAuth() {
+    document.getElementById('tg-auth-screen').classList.add('hidden');
+    const savedLang = localStorage.getItem('ofb_language');
+    if (savedLang) {
+        setLanguage(savedLang);
+    } else {
+        document.getElementById('language-screen').classList.remove('hidden');
+        document.getElementById('language-screen').classList.add('active');
+    }
+}
+
+function loadTelegramWidget() {
+    const container = document.getElementById('tg-login-widget');
+    if (!container || container.querySelector('script')) return;
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = 'https://telegram.org/js/telegram-widget.js?22';
+    script.setAttribute('data-telegram-login', 'OnlyCatalog_bot');
+    script.setAttribute('data-size', 'large');
+    script.setAttribute('data-onauth', 'onTelegramWidgetAuth(user)');
+    script.setAttribute('data-request-access', 'write');
+    script.setAttribute('data-lang', 'ru');
+    container.appendChild(script);
+}
+
+function isWidgetAuthValid() {
+    const stored = localStorage.getItem('ofb_tg_widget_auth');
+    if (!stored) return false;
+    try {
+        const data = JSON.parse(stored);
+        // Expire after 7 days
+        return data.auth_date && (Date.now() / 1000 - data.auth_date < 604800);
+    } catch { return false; }
+}
+
+// ── Initialize app ────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     if (window.Telegram?.WebApp) {
         window.Telegram.WebApp.ready();
@@ -15,14 +72,27 @@ document.addEventListener('DOMContentLoaded', () => {
         window.Telegram.WebApp.setBackgroundColor('#0a0a0a');
     }
 
-    const savedLang = localStorage.getItem('ofb_language');
-    if (savedLang) {
-        setLanguage(savedLang);
-    }
-
     // Load saved theme
     const savedTheme = localStorage.getItem('ofb_theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
+
+    const inTelegram = !!(window.Telegram?.WebApp?.initData);
+    const hasWidgetAuth = isWidgetAuthValid();
+
+    if (!inTelegram && !hasWidgetAuth) {
+        // Browser access without auth — show Telegram login screen
+        document.getElementById('tg-auth-screen').classList.remove('hidden');
+        loadTelegramWidget();
+    } else {
+        // In Telegram or already authenticated
+        const savedLang = localStorage.getItem('ofb_language');
+        if (savedLang) {
+            setLanguage(savedLang);
+        } else {
+            document.getElementById('language-screen').classList.remove('hidden');
+            document.getElementById('language-screen').classList.add('active');
+        }
+    }
 });
 
 // Theme toggle
