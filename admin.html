@@ -80,6 +80,8 @@
         .tag-premium { background: rgba(255,193,7,0.12); color: #ffc107; }
         .tag-verified { background: rgba(88,166,255,0.12); color: #58a6ff; }
         .tag-scam { background: rgba(248,81,73,0.2); color: #ff4444; border: 1px solid #f85149; }
+        .tag-ghost { background: rgba(139,148,158,0.12); color: #8b949e; }
+        .modal-bg.show { display: flex; }
 
         /* Buttons */
         .btn { padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; border: none; transition: all .15s; white-space: nowrap; }
@@ -171,6 +173,7 @@
             <li><a data-tab="complaints" onclick="goTab('complaints')"><span class="ico">&#9888;</span><span>Жалобы</span><span class="badge" id="bComplaints"></span></a></li>
             <li><a data-tab="users" onclick="goTab('users')"><span class="ico">&#128100;</span><span>Пользователи</span></a></li>
             <li><a data-tab="notifications" onclick="goTab('notifications')"><span class="ico">&#128276;</span><span>Уведомления</span></a></li>
+            <li><a data-tab="posts" onclick="goTab('posts')"><span class="ico">&#128204;</span><span>Посты</span></a></li>
         </ul>
         <div class="sidebar-logout">
             <button onclick="doLogout()">&#128275; Выйти</button>
@@ -227,6 +230,56 @@
             </div>
             <div id="notifGrid" class="grid"></div>
         </section>
+
+        <!-- Posts -->
+        <section id="tab-posts" class="tab">
+            <div class="tab-head"><h2>&#128204; Посты в чат</h2><button class="btn btn-ok" onclick="loadPosts()">&#8635; Обновить</button></div>
+
+            <div class="notif-form" style="margin-bottom:24px;">
+                <h3 style="margin-bottom:14px;">Новый пост</h3>
+                <div style="display:grid;gap:10px;">
+                    <div>
+                        <label style="font-size:11px;color:#8b949e;display:block;margin-bottom:4px;">Текст поста <span style="color:#8b949e;font-weight:400;">(HTML: &lt;b&gt;, &lt;i&gt;, &lt;a href=&quot;...&quot;&gt;)</span></label>
+                        <textarea id="postText" rows="5" placeholder="Текст поста..." style="min-height:120px;resize:vertical;"></textarea>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                        <div>
+                            <label style="font-size:11px;color:#8b949e;display:block;margin-bottom:4px;">Текст кнопки</label>
+                            <input type="text" id="postBtnText" placeholder="📋 Открыть каталог">
+                        </div>
+                        <div>
+                            <label style="font-size:11px;color:#8b949e;display:block;margin-bottom:4px;">URL кнопки</label>
+                            <input type="text" id="postBtnUrl" placeholder="https://...">
+                        </div>
+                    </div>
+                    <div>
+                        <label style="font-size:11px;color:#8b949e;display:block;margin-bottom:4px;">⏰ Запланировать (необязательно)</label>
+                        <input type="datetime-local" id="postSchedule" style="width:100%;">
+                    </div>
+                    <div style="display:flex;gap:20px;flex-wrap:wrap;padding:4px 0;">
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+                            <input type="checkbox" id="postMentionAll" style="width:16px;height:16px;accent-color:#00d4aa;">
+                            📢 Тегнуть @channel в чате
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+                            <input type="checkbox" id="postDmUsers" style="width:16px;height:16px;accent-color:#00d4aa;">
+                            ✉️ Разослать в личку пользователям
+                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+                            <input type="checkbox" id="postSilent" style="width:16px;height:16px;accent-color:#00d4aa;">
+                            🔇 Без звука (silent)
+                        </label>
+                    </div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <button class="btn btn-ok" onclick="createPost(false)" style="flex:1;min-width:140px;">&#9654; Отправить сейчас</button>
+                        <button class="btn" onclick="createPost(true)" style="flex:1;min-width:140px;background:#21262d;border:1px solid #30363d;">&#128337; Запланировать</button>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="color:#fff;font-size:14px;margin-bottom:12px;">История постов</h3>
+            <div id="postsGrid"></div>
+        </section>
     </main>
 </div>
 
@@ -243,6 +296,7 @@ const API = 'https://ofb-catalog-api.8cctq5y6ty.workers.dev';
 let adminPassword = '';
 let allListingsCache = [];
 let usersCache = [];
+let postsCache = [];
 
 /* ========== AUTH ========== */
 async function doLogin() {
@@ -287,7 +341,7 @@ function goTab(name) {
     document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
     document.getElementById('tab-' + name).classList.add('active');
     document.querySelector(`[data-tab="${name}"]`).classList.add('active');
-    const loaders = { dashboard: loadDashboard, pending: loadPending, listings: loadListings, jobs: loadJobs, complaints: loadComplaints, users: loadUsers, notifications: loadNotifications };
+    const loaders = { dashboard: loadDashboard, pending: loadPending, listings: loadListings, jobs: loadJobs, complaints: loadComplaints, users: loadUsers, notifications: loadNotifications, posts: loadPosts };
     if (loaders[name]) loaders[name]();
 }
 
@@ -638,6 +692,125 @@ async function doPremium(id) {
 function refresh() {
     const a = document.querySelector('.sidebar-nav a.active');
     if (a) goTab(a.dataset.tab);
+}
+
+/* ========== POSTS ========== */
+async function loadPosts() {
+    const el = document.getElementById('postsGrid');
+    el.innerHTML = '<div class="loading">Загрузка</div>';
+    const d = await api('/api/admin/posts');
+    const posts = Array.isArray(d) ? d : (d?.data || []);
+    postsCache = posts;
+    if (!posts.length) { el.innerHTML = '<div class="empty">Постов нет. Создайте первый!</div>'; return; }
+    el.innerHTML = posts.map(p => renderPostCard(p)).join('');
+}
+
+function renderPostCard(p) {
+    const status = { pending: ['tag-pending', '⏳ Запланирован'], sent: ['tag-active', '✅ Отправлен'], draft: ['tag-ghost', '📝 Черновик'], cancelled: ['tag-rejected', '❌ Отменён'] };
+    const [tagClass, tagLabel] = status[p.status] || ['tag-pending', p.status];
+    const scheduled = p.scheduled_at ? new Date(p.scheduled_at).toLocaleString('ru') : '—';
+    const sentAt = p.sent_at ? new Date(p.sent_at).toLocaleString('ru') : '—';
+    const textPreview = (p.text || '').replace(/<[^>]+>/g, '').slice(0, 120);
+
+    return `<div class="card" style="margin-bottom:12px;">
+        <div class="card-top">
+            <div class="card-title" style="flex:1;max-width:calc(100% - 100px);">${esc(textPreview)}${p.text.length > 120 ? '…' : ''}</div>
+            <span class="tag ${tagClass}" style="flex-shrink:0;">${tagLabel}</span>
+        </div>
+        <div class="card-body">
+            ${p.button_text ? `<div class="r"><span class="rk">Кнопка</span><span class="rv">${esc(p.button_text)}</span></div>` : ''}
+            ${p.button_url ? `<div class="r"><span class="rk">URL</span><span class="rv" style="word-break:break-all;font-size:10px;">${esc(p.button_url)}</span></div>` : ''}
+            <div class="r"><span class="rk">📅 Запланирован</span><span class="rv">${scheduled}</span></div>
+            <div class="r"><span class="rk">📤 Отправлен</span><span class="rv">${sentAt}</span></div>
+            <div class="r"><span class="rk">📌 Закреплён</span><span class="rv">${p.is_pinned ? '<span style="color:#00d4aa">Да</span>' : 'Нет'}</span></div>
+            <div class="r" style="background:rgba(0,212,170,0.05);padding:6px;border-radius:6px;margin-top:4px;">
+                <span class="rk" style="font-weight:600;">👆 Кликов по кнопке</span>
+                <span class="rv" style="color:#00d4aa;font-size:18px;font-weight:700;">${p.clicks || 0}</span>
+            </div>
+        </div>
+        <div class="card-acts">
+            ${p.status !== 'sent' ? `<button class="btn btn-ok" onclick="doSendPost(${p.id})">▶ Отправить</button>` : ''}
+            ${p.status === 'sent' && !p.is_pinned ? `<button class="btn" onclick="doPinPost(${p.id})" style="background:#21262d;border:1px solid #ffc107;color:#ffc107;">📌 Закрепить</button>` : ''}
+            ${p.is_pinned ? `<button class="btn btn-warn" onclick="doUnpinPost(${p.id})">📌 Открепить</button>` : ''}
+            ${p.status === 'pending' ? `<button class="btn btn-reject" onclick="doCancelPost(${p.id})">✕ Отменить</button>` : ''}
+            <button class="btn" onclick="previewPost(${p.id})" style="background:#21262d;border:1px solid #30363d;">👁 Превью</button>
+        </div>
+    </div>`;
+}
+
+async function createPost(scheduleOnly) {
+    const text = document.getElementById('postText').value.trim();
+    const button_text = document.getElementById('postBtnText').value.trim();
+    const button_url = document.getElementById('postBtnUrl').value.trim();
+    const scheduledRaw = document.getElementById('postSchedule').value;
+    const mention_all = document.getElementById('postMentionAll').checked;
+    const dm_users = document.getElementById('postDmUsers').checked;
+    const silent = document.getElementById('postSilent').checked;
+
+    if (!text) { toast('Введите текст поста', 'err'); return; }
+    if (scheduleOnly && !scheduledRaw) { toast('Укажите дату и время', 'err'); return; }
+
+    const scheduled_at = scheduledRaw ? new Date(scheduledRaw).toISOString() : null;
+    const body = { text, button_text, button_url, mention_all, dm_users, silent, scheduled_at };
+
+    const r = await api('/api/admin/posts', 'POST', body);
+    if (!r) return;
+
+    if (!scheduleOnly) {
+        // Send immediately
+        const r2 = await api('/api/admin/posts/' + r.id + '/send', 'POST');
+        if (r2 !== null) { toast('Пост отправлен и закреплён!'); clearPostForm(); loadPosts(); }
+    } else {
+        toast('Пост запланирован на ' + new Date(scheduled_at).toLocaleString('ru'));
+        clearPostForm();
+        loadPosts();
+    }
+}
+
+function clearPostForm() {
+    ['postText','postBtnText','postBtnUrl'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('postSchedule').value = '';
+    document.getElementById('postMentionAll').checked = false;
+    document.getElementById('postDmUsers').checked = false;
+    document.getElementById('postSilent').checked = false;
+}
+
+async function doSendPost(id) {
+    if (!confirm('Отправить пост в чат прямо сейчас?')) return;
+    const r = await api('/api/admin/posts/' + id + '/send', 'POST');
+    if (r !== null) { toast('Пост отправлен и закреплён!'); loadPosts(); }
+}
+async function doPinPost(id) {
+    const r = await api('/api/admin/posts/' + id + '/pin', 'POST');
+    if (r !== null) { toast('Пост закреплён'); loadPosts(); }
+}
+async function doUnpinPost(id) {
+    if (!confirm('Открепить пост? Статистика кликов сохранится.')) return;
+    const r = await api('/api/admin/posts/' + id + '/unpin', 'POST');
+    if (r !== null) { toast(`Откреплено. Кликов было: ${r.clicks || 0}`); loadPosts(); }
+}
+async function doCancelPost(id) {
+    if (!confirm('Отменить запланированный пост?')) return;
+    const r = await api('/api/admin/posts/' + id + '/cancel', 'POST');
+    if (r !== null) { toast('Отменено'); loadPosts(); }
+}
+function previewPost(id) {
+    const p = postsCache.find(x => x.id === id);
+    if (!p) return;
+    document.getElementById('modalBox').innerHTML = `
+        <div style="padding:20px;max-height:80vh;overflow-y:auto;">
+            <h3 style="color:#00d4aa;margin-bottom:12px;">Превью поста</h3>
+            <div style="background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:14px;white-space:pre-wrap;line-height:1.6;color:#c9d1d9;font-size:14px;margin-bottom:12px;">${p.text}</div>
+            ${p.button_text ? `<div style="text-align:center;padding:8px;background:rgba(0,212,170,0.08);border:1px solid rgba(0,212,170,0.3);border-radius:6px;color:#00d4aa;font-weight:600;margin-bottom:12px;">[ ${esc(p.button_text)} ]</div>` : ''}
+            <div style="font-size:12px;color:#8b949e;margin-bottom:14px;">
+                ${p.mention_all ? '📢 Упоминание @channel включено<br>' : ''}
+                ${p.dm_users ? '✉️ Рассылка в личку включена<br>' : ''}
+                ${p.button_url ? `🔗 URL: ${esc(p.button_url)}` : ''}
+            </div>
+            <button class="btn" onclick="closeModal()" style="width:100%;">Закрыть</button>
+        </div>
+    `;
+    document.getElementById('modalBg').classList.add('open');
 }
 
 /* ========== INIT ========== */
