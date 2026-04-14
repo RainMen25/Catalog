@@ -477,6 +477,16 @@ async function showListingDetail(id) {
 
         renderReviews(ratings.data || []);
 
+        // Hide rating form if user owns this listing
+        const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+        const deviceId = localStorage.getItem('ofb_device_id');
+        const myId = tgUser ? String(tgUser.id) : deviceId;
+        const ratingSection = document.querySelector('.rating-section');
+        if (ratingSection) {
+            const isOwn = myId && listing.user_telegram_id && String(listing.user_telegram_id) === myId;
+            ratingSection.style.display = isOwn ? 'none' : '';
+        }
+
         document.getElementById('main-app').classList.add('hidden');
         document.getElementById('listing-detail').classList.remove('hidden');
     } catch (error) {
@@ -522,23 +532,32 @@ function resetStars() {
     document.getElementById('rating-comment').value = '';
 }
 
-async function submitRating() {
+async function handleRatingSubmit() {
     if (!currentRating) {
-        showToast(t('toast_error'), 'error');
+        showToast('Выберите оценку', 'error');
         return;
     }
 
     const comment = document.getElementById('rating-comment').value;
+    const listingId = currentListingId;
 
     try {
-        await submitRating(currentListingId, currentRating, comment);
-        showToast(t('toast_rating_saved'), 'success');
+        await submitRating(listingId, currentRating, comment);
+        showToast('Оценка сохранена!', 'success');
         resetStars();
+        currentRating = 0;
 
-        const ratings = await getRatings(currentListingId);
+        const ratings = await getRatings(listingId);
         renderReviews(ratings.data || []);
     } catch (error) {
-        showToast(t('toast_error'), 'error');
+        const msg = error?.message || '';
+        if (msg.includes('собственное')) {
+            showToast('Нельзя оценивать своё объявление', 'error');
+        } else if (msg.includes('уже')) {
+            showToast('Вы уже оставили отзыв', 'error');
+        } else {
+            showToast('Ошибка при отправке', 'error');
+        }
     }
 }
 
@@ -688,8 +707,151 @@ async function saveProfile(event) {
 }
 
 function showMyListings() {
-    // TODO: Implement my listings view
-    showToast('Coming soon');
+    document.getElementById('profile-screen').classList.add('hidden');
+    document.getElementById('my-listings-screen').classList.remove('hidden');
+    loadMyListings();
+}
+
+function closeMyListings() {
+    document.getElementById('my-listings-screen').classList.add('hidden');
+    document.getElementById('profile-screen').classList.remove('hidden');
+}
+
+async function loadMyListings() {
+    const container = document.getElementById('my-listings-list');
+    const empty = document.getElementById('no-my-listings');
+    container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:20px;">Загрузка...</p>';
+    empty.classList.add('hidden');
+
+    try {
+        const result = await getMyListings();
+        const listings = result.listings || [];
+        const jobs = result.jobs || [];
+
+        container.innerHTML = '';
+
+        if (listings.length === 0 && jobs.length === 0) {
+            empty.classList.remove('hidden');
+            return;
+        }
+
+        if (listings.length > 0) {
+            const title = document.createElement('p');
+            title.style.cssText = 'font-size:12px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;padding:16px 16px 8px;margin:0;';
+            title.textContent = 'Объявления';
+            container.appendChild(title);
+
+            listings.forEach(item => {
+                container.appendChild(createMyListingCard(item, 'listing'));
+            });
+        }
+
+        if (jobs.length > 0) {
+            const title = document.createElement('p');
+            title.style.cssText = 'font-size:12px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;padding:16px 16px 8px;margin:0;';
+            title.textContent = 'Ищу работу';
+            container.appendChild(title);
+
+            jobs.forEach(item => {
+                container.appendChild(createMyListingCard(item, 'job'));
+            });
+        }
+    } catch (error) {
+        container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:20px;">Ошибка загрузки</p>';
+    }
+}
+
+function createMyListingCard(item, type) {
+    const card = document.createElement('div');
+    card.className = 'listing-card';
+    card.style.margin = '0 16px 12px';
+    card.style.position = 'relative';
+
+    const statusColors = { approved: '#4caf50', pending: '#ff9800', rejected: '#f44336' };
+    const statusLabels = { approved: 'Активно', pending: 'На проверке', rejected: 'Отклонено' };
+    const statusColor = statusColors[item.status] || '#888';
+    const statusLabel = statusLabels[item.status] || item.status;
+
+    const premiumBadge = item.is_premium
+        ? `<span style="background:rgba(255,215,0,0.15);color:#ffd700;border:1px solid rgba(255,215,0,0.3);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;margin-left:6px;">★ Premium</span>`
+        : '';
+
+    card.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+            <div style="flex:1;min-width:0;">
+                <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:4px;">
+                    <span style="font-weight:600;font-size:15px;">${item.name}</span>
+                    ${premiumBadge}
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                    <span style="font-size:12px;color:var(--text-secondary);">${t('cat_' + item.category) || item.category}</span>
+                    <span style="width:6px;height:6px;border-radius:50%;background:${statusColor};flex-shrink:0;"></span>
+                    <span style="font-size:12px;color:${statusColor};">${statusLabel}</span>
+                </div>
+                <p style="font-size:13px;color:var(--text-secondary);margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${item.description}</p>
+            </div>
+            <button onclick="confirmDeleteItem(${item.id}, '${type}')" style="
+                flex-shrink:0;width:36px;height:36px;border-radius:8px;
+                background:rgba(244,67,54,0.1);border:1px solid rgba(244,67,54,0.25);
+                color:#f44336;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                    <path d="M10 11v6M14 11v6"></path>
+                    <path d="M9 6V4h6v2"></path>
+                </svg>
+            </button>
+        </div>
+    `;
+
+    return card;
+}
+
+function confirmDeleteItem(id, type) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-card" onclick="event.stopPropagation()" style="max-width:360px;">
+            <div style="padding:24px;text-align:center;">
+                <div style="font-size:48px;margin-bottom:16px;">🗑️</div>
+                <h3 style="margin-bottom:8px;">Удалить заявку?</h3>
+                <p style="color:var(--text-secondary);font-size:14px;margin-bottom:24px;">Это действие нельзя отменить.</p>
+                <div style="display:flex;gap:10px;">
+                    <button onclick="this.closest('.modal-overlay').remove()" style="
+                        flex:1;padding:12px;background:var(--bg-input);border:1px solid var(--border);
+                        border-radius:var(--radius-sm);color:var(--text-primary);cursor:pointer;font-size:14px;">
+                        Отмена
+                    </button>
+                    <button onclick="doDeleteItem(${id},'${type}',this)" style="
+                        flex:1;padding:12px;background:rgba(244,67,54,0.15);border:1px solid rgba(244,67,54,0.3);
+                        border-radius:var(--radius-sm);color:#f44336;cursor:pointer;font-size:14px;font-weight:600;">
+                        Удалить
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    modal.onclick = () => modal.remove();
+    document.body.appendChild(modal);
+}
+
+async function doDeleteItem(id, type, btn) {
+    btn.disabled = true;
+    btn.textContent = '...';
+    try {
+        if (type === 'listing') {
+            await deleteListing(id);
+        } else {
+            await deleteJob(id);
+        }
+        btn.closest('.modal-overlay').remove();
+        showToast('Заявка удалена', 'success');
+        loadMyListings();
+    } catch (error) {
+        btn.disabled = false;
+        btn.textContent = 'Удалить';
+        showToast('Ошибка удаления', 'error');
+    }
 }
 
 // Avatar preview

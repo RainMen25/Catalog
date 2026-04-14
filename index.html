@@ -408,7 +408,7 @@
                         <span class="star" data-rating="5" onclick="setRating(5)" style="cursor: pointer;">🤍</span>
                     </div>
                     <textarea id="rating-comment" placeholder="Оставьте комментарий..." data-i18n-placeholder="detail_comment_placeholder"></textarea>
-                    <button class="submit-rating-btn" onclick="submitRating()" data-i18n="detail_submit_rating">Отправить оценку</button>
+                    <button class="submit-rating-btn" onclick="handleRatingSubmit()" data-i18n="detail_submit_rating">Отправить оценку</button>
                 </div>
 
                 <!-- Reviews Section -->
@@ -458,6 +458,30 @@
                 </div>
                 <button type="submit" class="submit-btn" data-i18n="edit_save">Сохранить</button>
             </form>
+        </div>
+
+        <!-- My Listings Screen -->
+        <div id="my-listings-screen" class="screen hidden">
+            <header class="app-header">
+                <button class="icon-btn" onclick="closeMyListings()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                </button>
+                <h2>Мои заявки</h2>
+                <div></div>
+            </header>
+            <div class="notifications-content">
+                <div id="my-listings-list"></div>
+                <div id="no-my-listings" class="no-results hidden">
+                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="color: var(--text-muted); margin-bottom: 16px;">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    <p>Нет заявок</p>
+                </div>
+            </div>
         </div>
 
         <!-- Notifications Screen -->

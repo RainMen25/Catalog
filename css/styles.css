@@ -1409,6 +1409,22 @@ body {
     overflow: hidden;
 }
 
+/* Force white text in listing cards */
+.listing-card .listing-name,
+.listing-card .listing-telegram {
+    color: #ffffff !important;
+}
+.listing-card .listing-description {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+[data-theme="light"] .listing-card .listing-name,
+[data-theme="light"] .listing-card .listing-telegram {
+    color: #1a1a1a !important;
+}
+[data-theme="light"] .listing-card .listing-description {
+    color: rgba(0, 0, 0, 0.65) !important;
+}
+
 /* Fix job cards */
 .listing-card .listing-name {
     white-space: nowrap;

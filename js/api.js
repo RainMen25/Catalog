@@ -2,6 +2,15 @@ const API_BASE = 'https://ofb-catalog-api.8cctq5y6ty.workers.dev/api';
 
 const tg = window.Telegram?.WebApp;
 
+function getDeviceId() {
+    let id = localStorage.getItem('ofb_device_id');
+    if (!id) {
+        id = 'dev_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+        localStorage.setItem('ofb_device_id', id);
+    }
+    return id;
+}
+
 function getTelegramUser() {
     if (tg?.initDataUnsafe?.user) {
         return {
@@ -31,6 +40,8 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
 
     if (tg?.initData) {
         options.headers['X-Telegram-Init-Data'] = tg.initData;
+    } else {
+        options.headers['X-Device-ID'] = getDeviceId();
     }
 
     if (body) {
@@ -135,6 +146,14 @@ async function updateProfile(data) {
 
 async function getMyListings() {
     return apiRequest('/profile/listings');
+}
+
+async function deleteListing(id) {
+    return apiRequest(`/listings/${id}`, 'DELETE');
+}
+
+async function deleteJob(id) {
+    return apiRequest(`/jobs/${id}`, 'DELETE');
 }
 
 // Favorites

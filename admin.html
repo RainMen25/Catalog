@@ -342,14 +342,31 @@ async function loadDashboard() {
 }
 
 function renderStats(d) {
+    const v = d.visits || {};
     document.getElementById('statsGrid').innerHTML = `
-        <div class="stat blue"><div class="lbl">Пользователи</div><div class="val">${d.users ?? d.totalUsers ?? 0}</div></div>
-        <div class="stat"><div class="lbl">Активные объявления</div><div class="val">${d.listings ?? d.active ?? d.totalListings ?? 0}</div></div>
-        <div class="stat turquoise"><div class="lbl">На модерации</div><div class="val">${d.pending ?? d.pendingListings ?? 0}</div></div>
-        <div class="stat gold"><div class="lbl">Премиум (из 3)</div><div class="val">${d.premium ?? 0} / 3</div></div>
-        <div class="stat red"><div class="lbl">Жалобы</div><div class="val">${d.complaints ?? d.totalComplaints ?? 0}</div></div>
-        <div class="stat"><div class="lbl">SCAM</div><div class="val">${d.scam ?? d.totalScam ?? 0}</div></div>
+        <div class="stat blue"><div class="lbl">Всего пользователей</div><div class="val">${d.users ?? 0}</div></div>
+        <div class="stat"><div class="lbl">Активные объявления</div><div class="val">${d.listings ?? 0}</div></div>
+        <div class="stat turquoise"><div class="lbl">На модерации</div><div class="val">${d.pending ?? 0}</div></div>
+        <div class="stat gold"><div class="lbl">Премиум</div><div class="val">${d.premium ?? 0}</div></div>
+        <div class="stat red"><div class="lbl">Жалобы</div><div class="val">${d.complaints ?? 0}</div></div>
+        <div class="stat"><div class="lbl">SCAM</div><div class="val">${d.scam ?? 0}</div></div>
     `;
+    // Visit stats block
+    const visitHtml = `
+        <div style="margin-top:20px;">
+            <h3 style="color:#fff;font-size:15px;margin-bottom:12px;">📊 Аналитика посещений</h3>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">
+                <div class="stat turquoise"><div class="lbl">Уникальных за неделю</div><div class="val">${v.unique_week ?? 0}</div></div>
+                <div class="stat blue"><div class="lbl">Уникальных за месяц</div><div class="val">${v.unique_month ?? 0}</div></div>
+                <div class="stat"><div class="lbl">Новых за неделю</div><div class="val">${v.new_week ?? 0}</div></div>
+                <div class="stat"><div class="lbl">Новых за месяц</div><div class="val">${v.new_month ?? 0}</div></div>
+                <div class="stat gold"><div class="lbl">Всего визитов (нед.)</div><div class="val">${v.total_week ?? 0}</div></div>
+                <div class="stat gold"><div class="lbl">Всего визитов (мес.)</div><div class="val">${v.total_month ?? 0}</div></div>
+            </div>
+            <p style="color:#8b949e;font-size:11px;margin-top:8px;">Уникальные — разные пользователи (по ID). Все визиты — суммарные заходы тех же пользователей.</p>
+        </div>
+    `;
+    document.getElementById('tab-dashboard').insertAdjacentHTML('beforeend', visitHtml);
 }
 
 /* ========== LISTING CARD ========== */
