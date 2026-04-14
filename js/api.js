@@ -186,3 +186,8 @@ async function getSubscriptions() {
 async function toggleSubscription(category) {
     return apiRequest(`/subscriptions/${category}`, 'POST');
 }
+
+// Open to work toggle
+async function toggleListingAvailable(id) {
+    return apiRequest(`/listings/${id}/available`, 'POST');
+}

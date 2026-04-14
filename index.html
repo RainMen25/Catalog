@@ -98,18 +98,34 @@
                 <!-- Exchange Tab -->
                 <div id="exchange-tab" class="tab-pane active">
                     <div class="filters">
-                        <select id="category-filter" onchange="filterListings()">
-                            <option value="all" data-i18n="cat_all">Все категории</option>
-                            <option value="models" data-i18n="cat_models">Модели</option>
-                            <option value="management" data-i18n="cat_management">Менеджмент</option>
-                            <option value="marketing" data-i18n="cat_marketing">Маркетинг</option>
-                            <option value="chatters" data-i18n="cat_chatters">Чаттеры</option>
-                            <option value="photographers" data-i18n="cat_photographers">Фотографы</option>
-                            <option value="videographers" data-i18n="cat_videographers">Видеографы</option>
-                            <option value="smm" data-i18n="cat_smm">SMM</option>
-                            <option value="designers" data-i18n="cat_designers">Дизайнеры</option>
-                            <option value="other" data-i18n="cat_other">Другое</option>
-                        </select>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <select id="category-filter" onchange="filterListings()" style="flex:1;">
+                                <option value="all" data-i18n="cat_all">Все категории</option>
+                                <option value="models" data-i18n="cat_models">Модели</option>
+                                <option value="management" data-i18n="cat_management">Менеджмент</option>
+                                <option value="marketing" data-i18n="cat_marketing">Маркетинг</option>
+                                <option value="chatters" data-i18n="cat_chatters">Чаттеры</option>
+                                <option value="photographers" data-i18n="cat_photographers">Фотографы</option>
+                                <option value="videographers" data-i18n="cat_videographers">Видеографы</option>
+                                <option value="smm" data-i18n="cat_smm">SMM</option>
+                                <option value="designers" data-i18n="cat_designers">Дизайнеры</option>
+                                <option value="other" data-i18n="cat_other">Другое</option>
+                            </select>
+                            <button id="subscribe-btn" onclick="toggleCategorySubscription()" title="Подписаться на категорию" style="
+                                flex-shrink:0;width:38px;height:38px;border-radius:8px;
+                                background:var(--bg-input);border:1px solid var(--border);
+                                color:var(--text-secondary);cursor:pointer;display:flex;
+                                align-items:center;justify-content:center;font-size:18px;transition:all .2s;">
+                                🔔
+                            </button>
+                            <button id="compact-toggle" onclick="toggleCompactView()" title="Компактный вид" style="
+                                flex-shrink:0;width:38px;height:38px;border-radius:8px;
+                                background:var(--bg-input);border:1px solid var(--border);
+                                color:var(--text-secondary);cursor:pointer;display:flex;
+                                align-items:center;justify-content:center;font-size:16px;transition:all .2s;">
+                                ⊞
+                            </button>
+                        </div>
                         <input type="text" id="search-input" placeholder="Поиск..." data-i18n-placeholder="search_placeholder" oninput="filterListings()">
                     </div>
                     <div id="premium-listings" class="premium-section"></div>

@@ -3,6 +3,8 @@ let currentRating = 0;
 let listingsData = [];
 let jobsData = [];
 let favoritesData = [];
+let subscribedCategories = new Set();
+let isCompactView = localStorage.getItem('ofb_compact') === '1';
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
@@ -38,6 +40,8 @@ function showMainApp() {
     applyTranslations();
     loadListings();
     loadNotificationCount();
+    loadSubscriptions();
+    applyCompactView();
 }
 
 function switchTab(tab) {
@@ -146,6 +150,11 @@ function createListingCard(listing, isPremium) {
             ${t('verified_badge')}
         </span>` : '';
 
+    const availableBadge = (listing.is_available === 1 || listing.is_available === undefined)
+        ? `<span class="available-badge">🟢 Открыт к работе</span>` : '';
+    const viewsHtml = listing.views > 0
+        ? `<span class="listing-views">👁 ${listing.views}</span>` : '';
+
     card.innerHTML = `
         ${isPremium ? `<span class="premium-badge">${t('premium_badge')}</span>` : ''}
         <button class="favorite-btn" onclick="event.stopPropagation(); toggleFavoriteAction(${listing.id})">
@@ -162,6 +171,7 @@ function createListingCard(listing, isPremium) {
                     ${verifiedBadge}
                 </div>
                 <span class="listing-category">${t('cat_' + listing.category) || listing.category}</span>
+                ${availableBadge}
             </div>
         </div>
         <p class="listing-description" onclick="showListingDetail(${listing.id})">${listing.description}</p>
@@ -170,7 +180,10 @@ function createListingCard(listing, isPremium) {
                 <span>${heartsHtml}</span>
                 <span>${listing.is_scam ? '-' : rating}</span>
             </div>
-            <span class="listing-telegram">@${listing.telegram}</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+                ${viewsHtml}
+                <span class="listing-telegram">@${listing.telegram}</span>
+            </div>
         </div>
     `;
 
@@ -223,6 +236,84 @@ async function filterListings() {
         renderListings(result.data || []);
     } catch (error) {
         console.error('Failed to filter listings:', error);
+    }
+
+    // Update subscribe button state for new category
+    updateSubscribeBtn();
+}
+
+// ── Compact view ──────────────────────────────────────────────────────────────
+
+function applyCompactView() {
+    const container = document.getElementById('listings-container');
+    const btn = document.getElementById('compact-toggle');
+    if (!container) return;
+    if (isCompactView) {
+        container.classList.add('compact');
+        if (btn) { btn.style.background = 'var(--accent)'; btn.style.color = '#000'; }
+    } else {
+        container.classList.remove('compact');
+        if (btn) { btn.style.background = 'var(--bg-input)'; btn.style.color = 'var(--text-secondary)'; }
+    }
+}
+
+function toggleCompactView() {
+    isCompactView = !isCompactView;
+    localStorage.setItem('ofb_compact', isCompactView ? '1' : '0');
+    applyCompactView();
+}
+
+// ── Category subscriptions ────────────────────────────────────────────────────
+
+async function loadSubscriptions() {
+    try {
+        const result = await getSubscriptions();
+        subscribedCategories = new Set(result.data || []);
+        updateSubscribeBtn();
+    } catch {}
+}
+
+function updateSubscribeBtn() {
+    const btn = document.getElementById('subscribe-btn');
+    if (!btn) return;
+    const cat = document.getElementById('category-filter')?.value;
+    if (!cat || cat === 'all') {
+        btn.style.opacity = '0.4';
+        btn.title = 'Выберите категорию для подписки';
+        btn.style.background = 'var(--bg-input)';
+        btn.style.color = 'var(--text-secondary)';
+        return;
+    }
+    btn.style.opacity = '1';
+    if (subscribedCategories.has(cat)) {
+        btn.style.background = 'rgba(0,212,170,0.15)';
+        btn.style.color = 'var(--accent)';
+        btn.title = 'Отписаться от категории';
+    } else {
+        btn.style.background = 'var(--bg-input)';
+        btn.style.color = 'var(--text-secondary)';
+        btn.title = 'Подписаться на категорию';
+    }
+}
+
+async function toggleCategorySubscription() {
+    const cat = document.getElementById('category-filter')?.value;
+    if (!cat || cat === 'all') {
+        showToast('Выберите категорию для подписки', 'error');
+        return;
+    }
+    try {
+        const result = await toggleSubscription(cat);
+        if (result.action === 'subscribed') {
+            subscribedCategories.add(cat);
+            showToast('🔔 Подписка оформлена! Уведомим о новых объявлениях.', 'success');
+        } else {
+            subscribedCategories.delete(cat);
+            showToast('🔕 Подписка отменена', 'success');
+        }
+        updateSubscribeBtn();
+    } catch {
+        showToast('Ошибка подписки', 'error');
     }
 }
 
@@ -776,6 +867,10 @@ function createMyListingCard(item, type) {
         ? `<span style="background:rgba(255,215,0,0.15);color:#ffd700;border:1px solid rgba(255,215,0,0.3);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;margin-left:6px;">★ Premium</span>`
         : '';
 
+    const isAvailable = item.is_available !== 0;
+    const availColor = isAvailable ? '#4caf50' : '#888';
+    const availLabel = isAvailable ? '🟢 Открыт к работе' : '⚫ Не доступен';
+
     card.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
             <div style="flex:1;min-width:0;">
@@ -788,7 +883,12 @@ function createMyListingCard(item, type) {
                     <span style="width:6px;height:6px;border-radius:50%;background:${statusColor};flex-shrink:0;"></span>
                     <span style="font-size:12px;color:${statusColor};">${statusLabel}</span>
                 </div>
-                <p style="font-size:13px;color:var(--text-secondary);margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${item.description}</p>
+                <p style="font-size:13px;color:var(--text-secondary);margin:0 0 8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${item.description}</p>
+                ${type === 'listing' ? `<button onclick="event.stopPropagation(); toggleMyListingAvailable(${item.id}, this)" style="
+                    padding:4px 10px;font-size:11px;border-radius:20px;cursor:pointer;border:1px solid ${availColor};
+                    color:${availColor};background:transparent;transition:all .2s;" data-available="${isAvailable ? 1 : 0}">
+                    ${availLabel}
+                </button>` : ''}
             </div>
             <button onclick="confirmDeleteItem(${item.id}, '${type}')" style="
                 flex-shrink:0;width:36px;height:36px;border-radius:8px;
@@ -851,6 +951,21 @@ async function doDeleteItem(id, type, btn) {
         btn.disabled = false;
         btn.textContent = 'Удалить';
         showToast('Ошибка удаления', 'error');
+    }
+}
+
+async function toggleMyListingAvailable(id, btn) {
+    try {
+        const result = await toggleListingAvailable(id);
+        const isNow = result.is_available === 1;
+        const color = isNow ? '#4caf50' : '#888';
+        btn.dataset.available = isNow ? '1' : '0';
+        btn.style.borderColor = color;
+        btn.style.color = color;
+        btn.textContent = isNow ? '🟢 Открыт к работе' : '⚫ Не доступен';
+        showToast(isNow ? 'Статус: Открыт к работе' : 'Статус: Не доступен', 'success');
+    } catch {
+        showToast('Ошибка обновления статуса', 'error');
     }
 }
 

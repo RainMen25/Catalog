@@ -255,9 +255,48 @@
                         </div>
                     </div>
                     <div>
-                        <label style="font-size:11px;color:#8b949e;display:block;margin-bottom:4px;">⏰ Запланировать (необязательно)</label>
+                        <label style="font-size:11px;color:#8b949e;display:block;margin-bottom:4px;">⏰ Дата/время первой отправки (необязательно)</label>
                         <input type="datetime-local" id="postSchedule" style="width:100%;">
                     </div>
+
+                    <!-- Repeat settings -->
+                    <div style="background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:12px;">
+                        <label style="font-size:11px;color:#8b949e;display:block;margin-bottom:8px;">🔁 Повторять по дням (оставь пустым для разовой отправки)</label>
+                        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+                            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;background:#161b22;padding:4px 10px;border-radius:6px;border:1px solid #30363d;">
+                                <input type="checkbox" value="1" class="repeat-day" style="accent-color:#00d4aa;"> Пн
+                            </label>
+                            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;background:#161b22;padding:4px 10px;border-radius:6px;border:1px solid #30363d;">
+                                <input type="checkbox" value="2" class="repeat-day" style="accent-color:#00d4aa;"> Вт
+                            </label>
+                            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;background:#161b22;padding:4px 10px;border-radius:6px;border:1px solid #30363d;">
+                                <input type="checkbox" value="3" class="repeat-day" style="accent-color:#00d4aa;"> Ср
+                            </label>
+                            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;background:#161b22;padding:4px 10px;border-radius:6px;border:1px solid #30363d;">
+                                <input type="checkbox" value="4" class="repeat-day" style="accent-color:#00d4aa;"> Чт
+                            </label>
+                            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;background:#161b22;padding:4px 10px;border-radius:6px;border:1px solid #30363d;">
+                                <input type="checkbox" value="5" class="repeat-day" style="accent-color:#00d4aa;"> Пт
+                            </label>
+                            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;background:#161b22;padding:4px 10px;border-radius:6px;border:1px solid #30363d;">
+                                <input type="checkbox" value="6" class="repeat-day" style="accent-color:#00d4aa;"> Сб
+                            </label>
+                            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;background:#161b22;padding:4px 10px;border-radius:6px;border:1px solid #30363d;">
+                                <input type="checkbox" value="7" class="repeat-day" style="accent-color:#00d4aa;"> Вс
+                            </label>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                            <div>
+                                <label style="font-size:11px;color:#8b949e;display:block;margin-bottom:4px;">Время отправки</label>
+                                <input type="time" id="repeatTime" style="width:100%;" placeholder="12:00">
+                            </div>
+                            <div>
+                                <label style="font-size:11px;color:#8b949e;display:block;margin-bottom:4px;">Конец кампании (дата)</label>
+                                <input type="date" id="campaignEnd" style="width:100%;">
+                            </div>
+                        </div>
+                    </div>
+
                     <div style="display:flex;gap:20px;flex-wrap:wrap;padding:4px 0;">
                         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
                             <input type="checkbox" id="postMentionAll" style="width:16px;height:16px;accent-color:#00d4aa;">
@@ -756,9 +795,10 @@ function renderPostCard(p) {
             <div class="r"><span class="rk">📅 Запланирован</span><span class="rv">${scheduled}</span></div>
             <div class="r"><span class="rk">📤 Отправлен</span><span class="rv">${sentAt}</span></div>
             <div class="r"><span class="rk">📌 Закреплён</span><span class="rv">${p.is_pinned ? '<span style="color:#00d4aa">Да</span>' : 'Нет'}</span></div>
+            ${p.repeat_days ? `<div class="r"><span class="rk">🔁 Повтор</span><span class="rv">${getRepeatLabel(p.repeat_days)} в ${p.repeat_time || '—'}${p.campaign_end ? ' до '+p.campaign_end : ''}</span></div>` : ''}
             <div class="r" style="background:rgba(0,212,170,0.05);padding:6px;border-radius:6px;margin-top:4px;">
                 <span class="rk" style="font-weight:600;">👆 Кликов по кнопке</span>
-                <span class="rv" style="color:#00d4aa;font-size:18px;font-weight:700;">${p.clicks || 0}</span>
+                <span class="rv" style="color:#00d4aa;font-size:18px;font-weight:700;">${p.click_count || 0}</span>
             </div>
         </div>
         <div class="card-acts">
@@ -780,29 +820,61 @@ async function createPost(scheduleOnly) {
     const dm_users = document.getElementById('postDmUsers').checked;
     const silent = document.getElementById('postSilent').checked;
 
-    if (!text) { toast('Введите текст поста', 'err'); return; }
-    if (scheduleOnly && !scheduledRaw) { toast('Укажите дату и время', 'err'); return; }
+    // Repeat settings
+    const repeatDayChecks = [...document.querySelectorAll('.repeat-day:checked')];
+    const repeat_days = repeatDayChecks.length ? repeatDayChecks.map(c => c.value).join(',') : null;
+    const repeat_time = document.getElementById('repeatTime').value || null;
+    const campaign_end = document.getElementById('campaignEnd').value || null;
 
-    const scheduled_at = scheduledRaw ? new Date(scheduledRaw).toISOString() : null;
-    const body = { text, button_text, button_url, mention_all, dm_users, silent, scheduled_at };
+    if (!text) { toast('Введите текст поста', 'err'); return; }
+    if (scheduleOnly && !scheduledRaw && !repeat_days) { toast('Укажите дату или дни повтора', 'err'); return; }
+    if (repeat_days && !repeat_time) { toast('Укажите время отправки для повтора', 'err'); return; }
+
+    // If only repeat days set (no specific first date), calculate first send time
+    let scheduled_at = scheduledRaw ? new Date(scheduledRaw).toISOString() : null;
+    if (!scheduled_at && repeat_days && repeat_time) {
+        const days = repeat_days.split(',').map(Number);
+        const now = new Date();
+        for (let i = 0; i <= 7; i++) {
+            const d = new Date(now);
+            d.setDate(d.getDate() + i);
+            const dow = d.getDay() === 0 ? 7 : d.getDay();
+            if (days.includes(dow)) {
+                const [h, m] = repeat_time.split(':');
+                d.setHours(parseInt(h), parseInt(m), 0, 0);
+                if (d > now) { scheduled_at = d.toISOString(); break; }
+            }
+        }
+    }
+
+    const body = { text, button_text, button_url, mention_all, dm_users, silent, scheduled_at, repeat_days, repeat_time, campaign_end };
 
     const r = await api('/api/admin/posts', 'POST', body);
     if (!r) return;
 
     if (!scheduleOnly) {
-        // Send immediately
         const r2 = await api('/api/admin/posts/' + r.id + '/send', 'POST');
         if (r2 !== null) { toast('Пост отправлен и закреплён!'); clearPostForm(); loadPosts(); }
     } else {
-        toast('Пост запланирован на ' + new Date(scheduled_at).toLocaleString('ru'));
+        const dateStr = scheduled_at ? new Date(scheduled_at).toLocaleString('ru') : 'ближайшее совпадение';
+        const repeatStr = repeat_days ? ` | повтор: ${getRepeatLabel(repeat_days)}` : '';
+        toast(`Запланировано на ${dateStr}${repeatStr}`);
         clearPostForm();
         loadPosts();
     }
 }
 
+function getRepeatLabel(days) {
+    const names = { '1':'Пн','2':'Вт','3':'Ср','4':'Чт','5':'Пт','6':'Сб','7':'Вс' };
+    return days.split(',').map(d => names[d] || d).join(', ');
+}
+
 function clearPostForm() {
     ['postText','postBtnText','postBtnUrl'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('postSchedule').value = '';
+    document.getElementById('repeatTime').value = '';
+    document.getElementById('campaignEnd').value = '';
+    document.querySelectorAll('.repeat-day').forEach(c => c.checked = false);
     document.getElementById('postMentionAll').checked = false;
     document.getElementById('postDmUsers').checked = false;
     document.getElementById('postSilent').checked = false;

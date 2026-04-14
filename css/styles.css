@@ -1750,3 +1750,60 @@ body {
     border-radius: 12px !important;
 }
 
+
+/* ── Compact grid view ────────────────────────────────────────────── */
+.listings-grid.compact {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    padding: 0 8px !important;
+}
+.listings-grid.compact .listing-card {
+    padding: 10px !important;
+}
+.listings-grid.compact .listing-avatar {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+}
+.listings-grid.compact .listing-name {
+    font-size: 12px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100px !important;
+}
+.listings-grid.compact .listing-description {
+    -webkit-line-clamp: 2 !important;
+    font-size: 11px !important;
+    max-height: 2.4em !important;
+}
+.listings-grid.compact .listing-category {
+    font-size: 10px !important;
+}
+.listings-grid.compact .listing-footer {
+    font-size: 11px !important;
+}
+.listings-grid.compact .favorite-btn {
+    width: 28px !important;
+    height: 28px !important;
+    top: 6px !important;
+    right: 6px !important;
+}
+.listings-grid.compact .available-badge {
+    font-size: 9px !important;
+}
+
+/* ── Open to work badge ───────────────────────────────────────────── */
+.available-badge {
+    display: inline-block;
+    font-size: 10px;
+    color: #4caf50;
+    margin-top: 2px;
+}
+
+/* ── View counter ─────────────────────────────────────────────────── */
+.listing-views {
+    font-size: 11px;
+    color: rgba(255,255,255,0.45);
+}
