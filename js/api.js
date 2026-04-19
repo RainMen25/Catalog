@@ -41,13 +41,7 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
     if (tg?.initData) {
         options.headers['X-Telegram-Init-Data'] = tg.initData;
     } else {
-        // Browser: use verified Telegram Widget auth if available
-        const widgetAuth = localStorage.getItem('ofb_tg_widget_auth');
-        if (widgetAuth) {
-            options.headers['X-Telegram-Widget-Auth'] = widgetAuth;
-        } else {
-            options.headers['X-Device-ID'] = getDeviceId();
-        }
+        options.headers['X-Device-ID'] = getDeviceId();
     }
 
     if (body) {

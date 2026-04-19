@@ -334,6 +334,14 @@
                 <div id="webhookStatus" style="margin-top:8px;font-size:12px;color:#8b949e;"></div>
             </div>
 
+            <!-- Menu Button -->
+            <div class="notif-form" style="margin-bottom:20px;">
+                <h3 style="margin-bottom:8px;">📋 Кнопка меню бота</h3>
+                <p style="color:#8b949e;font-size:13px;margin-bottom:12px;">Добавляет кнопку <b style="color:#c9d1d9;">«📋 Каталог»</b> слева от поля ввода в боте. При нажатии сразу открывает Mini App без лишних шагов. Нажми один раз после деплоя.</p>
+                <button class="btn btn-ok" onclick="setupMenuButton()" style="width:100%;background:rgba(0,212,170,0.15);border:1px solid rgba(0,212,170,0.3);color:#00d4aa;">🚀 Активировать кнопку каталога</button>
+                <div id="menuBtnStatus" style="margin-top:8px;font-size:12px;color:#8b949e;"></div>
+            </div>
+
             <!-- Welcome message -->
             <div class="notif-form" style="margin-bottom:20px;">
                 <h3 style="margin-bottom:14px;">👋 Приветствие новых участников</h3>
@@ -967,6 +975,15 @@ async function setupWebhook() {
     const r = await api('/api/admin/setup-webhook', 'POST');
     if (!r) { el.textContent = '❌ Ошибка'; return; }
     el.textContent = r.ok ? '✅ Webhook установлен: ' + (r.url || '') : '❌ ' + (r.description || 'Ошибка');
+    el.style.color = r.ok ? '#00d4aa' : '#f85149';
+}
+
+async function setupMenuButton() {
+    const el = document.getElementById('menuBtnStatus');
+    el.textContent = 'Активирую...';
+    const r = await api('/api/admin/setup-menu-button', 'POST');
+    if (!r) { el.textContent = '❌ Ошибка'; return; }
+    el.textContent = r.ok ? '✅ Кнопка «📋 Каталог» активирована в боте!' : '❌ ' + (r.description || 'Ошибка');
     el.style.color = r.ok ? '#00d4aa' : '#f85149';
 }
 
